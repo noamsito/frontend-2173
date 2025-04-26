@@ -1,44 +1,34 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useAuth0 } from '@auth0/auth0-react';
+import { LoginButton, LogoutButton, Profile } from './components/AuthComponents';
 import TestStocks from './testStocks';
+import './App.css';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const { isAuthenticated, isLoading } = useAuth0();
+  
+  if (isLoading) return <div>Cargando...</div>;
   
   return (
-    <>
-      <TestStocks/>
-    </>
+    <div className="app-container">
+      {isAuthenticated ? (
+        <>
+          <header>
+            <Profile />
+            <LogoutButton />
+          </header>
+          <main>
+            <TestStocks />
+          </main>
+        </>
+      ) : (
+        <div className="login-container">
+          <h1>Bienvenido al Sistema de Stocks</h1>
+          <p>Por favor inicia sesión para continuar</p>
+          <LoginButton />
+        </div>
+      )}
+    </div>
   );
-
-/*
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  ) */
 }
-  
 
-export default App
+export default App;
