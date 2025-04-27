@@ -1,20 +1,19 @@
 :root {
-  /* Color palette */
-  --primary-dark: #1a3a5f;    /* Azul oscuro */
-  --primary: #2c5282;          /* Azul principal */
-  --primary-light: #4a69dd;    /* Azul más claro para acentos */
-  --secondary: #f7fafc;        /* Crema/Blanco hueso */
-  --secondary-warm: #f0e6d2;   /* Crema cálido */
-  --accent: #63b3ed;           /* Azul acento */
-  --text-dark: #1a202c;        /* Texto oscuro */
-  --text-light: #e2e8f0;       /* Texto claro */
-  --success: #48bb78;          /* Verde para éxito */
-  --warning: #ed8936;          /* Naranja para advertencias */
-  --error: #e53e3e;            /* Rojo para errores */
-  --gray-light: #edf2f7;       /* Gris claro */
-  --gray: #a0aec0;             /* Gris medio */
-  --gray-dark: #4a5568;        /* Gris oscuro */
-  
+  /* Paleta de colores profesional */
+  --primary: #1a365d;         /* Azul oscuro principal (como en la imagen 2) */
+  --primary-dark: #0f2947;    /* Azul muy oscuro */
+  --primary-light: #2c5282;   /* Azul medio */
+  --secondary: #f7fafc;       /* Gris muy claro casi blanco */
+  --secondary-warm: #edf2f7;  /* Gris claro */
+  --secondary-light: #ffffff; /* Blanco puro */
+  --text-dark: #2d3748;       /* Texto oscuro */
+  --text-light: #f7fafc;      /* Texto claro */
+  --success: #48bb78;         /* Verde para éxito */
+  --warning: #ed8936;         /* Naranja para advertencias */
+  --error: #e53e3e;           /* Rojo para errores */
+  --gray-light: #edf2f7;      /* Gris claro */
+  --gray: #a0aec0;            /* Gris medio */
+  --gray-dark: #4a5568;       /* Gris oscuro */
   /* Fonts */
   font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Oxygen, Ubuntu, sans-serif;
   line-height: 1.6;

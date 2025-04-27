@@ -47,8 +47,21 @@ function App() {
           </>
         ) : (
           <div className="login-container">
-            <h1>Bienvenido al Sistema de Stocks</h1>
-            <p>Por favor inicia sesión para continuar</p>
+            <div className="landing-content">
+              <div className="landing-text">
+                <h1>Bienvenido al Sistema de Stocks</h1>
+                <p>La plataforma más sofisticada para el seguimiento y compra de acciones en tiempo real</p>
+                <ul className="feature-list">
+                  <li>Seguimiento de acciones IPO y EMIT</li>
+                  <li>Gestión de compras y billetera</li>
+                  <li>Registro de eventos del mercado</li>
+                  <li>Interfaz intuitiva y profesional</li>
+                </ul>
+              </div>
+              <div className="landing-image">
+                <img src="/web-traffic.png" alt="Análisis de stocks" />
+              </div>
+            </div>
             <LoginButton />
           </div>
         )}

@@ -70,7 +70,7 @@ const EventLog = () => {
       {events.length > 0 && (
         <div className="events-list">
           {events.map((event) => (
-            <div key={event.id} className="event-item">
+            <div key={event.id} className="event-item" data-type={event.type}>
               <div className="event-icon">
                 {getEventIcon(event.type)}
               </div>
@@ -99,7 +99,6 @@ const EventLog = () => {
 };
 
 // Función para generar texto por defecto si no hay event_text
-// Función para generar texto por defecto si no hay event_text
 function getDefaultEventText(event) {
   const details = event.details;
   
@@ -112,7 +111,12 @@ function getDefaultEventText(event) {
     
     case 'PURCHASE_VALIDATION':
       if (details.status === 'ACCEPTED') {
-        return `Compraste ${details.quantity || ''} acciones de ${details.symbol || ''} por un total de $${(details.quantity * details.price).toFixed(2) || ''}`;
+        // Calcular el monto total si tenemos cantidad y precio
+        const totalAmount = details.quantity && details.price 
+          ? (details.quantity * details.price).toFixed(2)
+          : 'desconocido';
+        
+        return `Compraste ${details.quantity || ''} acciones de ${details.symbol || ''} por un total de $${totalAmount}`;
       }
       return '';
     
@@ -120,7 +124,7 @@ function getDefaultEventText(event) {
       return `El grupo ${details.group_id || ''} compró ${details.quantity || ''} acciones de ${details.symbol || ''}`;
     
     default:
-      return JSON.stringify(details);
+      return details.event_text || JSON.stringify(details);
   }
 }
 
