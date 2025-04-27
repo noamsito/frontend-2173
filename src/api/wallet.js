@@ -41,14 +41,19 @@ export const depositToWallet = async (amount) => {
       throw new Error("No se pudo obtener un token de autenticación");
     }
     
-    // Añadir logs para depuración
-    console.log("Token obtenido:", token.substring(0, 10) + "...");
+    // Obtener el perfil del usuario para enviar el ID de Auth0 como respaldo
+    const auth0 = await getAuth0Client();
+    const user = await auth0.getUser();
     
     const headers = { Authorization: `Bearer ${token}` };
     
+    // Incluir el ID de Auth0 en el body como respaldo
     const response = await axios.post(
       `${API_URL}/wallet/deposit`,
-      { amount },
+      { 
+        amount,
+        auth0Id: user.sub // Incluye el ID de Auth0 como respaldo
+      },
       { headers }
     );
     return response.data;
