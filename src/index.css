@@ -303,12 +303,38 @@ ul {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1.5rem;
+  padding: 0.5rem 0;
+}
+
+.pagination-controls select {
+  max-width: 150px;
 }
 
 .page-buttons {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 1.5rem; /* Aumentado para dar más espacio entre botones */
+}
+
+.page-buttons button {
+  padding: 0.4em 0.8em; /* Reducido para hacer los botones más pequeños */
+  font-size: 0.9rem;
+}
+
+.page-buttons span {
+  padding: 0 0.5rem;
+  font-weight: 500;
+  color: var(--primary-dark);
+}
+
+/* Estilos específicos para la página actual */
+.pagination-controls .current-page {
+  background-color: var(--secondary-warm);
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  min-width: 75px;
+  text-align: center;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 /* Search & Filters */
