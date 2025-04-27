@@ -1,107 +1,131 @@
-// src/pages/Wallet.jsx
 import { useState, useEffect } from 'react';
-import { getWalletBalance, depositToWallet } from '../api/wallet';
-import { useAuth0 } from '@auth0/auth0-react';
+import { getWalletBalance, depositToWallet } from '../api/apiService';
 
 const Wallet = () => {
-  const { isAuthenticated, loginWithRedirect } = useAuth0();
   const [balance, setBalance] = useState(0);
-  const [depositAmount, setDepositAmount] = useState(100);
   const [loading, setLoading] = useState(true);
-  const [depositing, setDepositing] = useState(false);
-  const [error, setError] = useState(null);
+  const [depositAmount, setDepositAmount] = useState('');
+  const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+  const [retryAvailable, setRetryAvailable] = useState(false);
+  const [lastDepositAmount, setLastDepositAmount] = useState('');
 
   useEffect(() => {
-    if (isAuthenticated) {
-      fetchBalance();
-    } else {
-      setLoading(false);
-    }
-  }, [isAuthenticated]);
+    fetchBalance();
+  }, []);
 
   const fetchBalance = async () => {
     try {
       setLoading(true);
       const data = await getWalletBalance();
-      setBalance(data.balance || 0);
-    } catch (error) {
-      console.error("Error fetching balance:", error);
-      setError("Failed to load wallet balance");
+      setBalance(data.balance);
+      setError('');
+    } catch (err) {
+      setError('No se pudo cargar el saldo. Por favor, intenta de nuevo.');
+      console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDeposit = async () => {
-    if (!isAuthenticated) {
-      loginWithRedirect();
+  const handleDeposit = async (e) => {
+    e.preventDefault();
+    if (!depositAmount || isNaN(parseFloat(depositAmount)) || parseFloat(depositAmount) <= 0) {
+      setError('Por favor, ingresa un monto válido mayor a cero.');
       return;
     }
-
-    if (depositAmount <= 0) {
-      setError("Please enter a valid amount");
-      return;
-    }
-
+  
     try {
-      setDepositing(true);
-      setError(null);
+      setLoading(true);
+      const amount = parseFloat(depositAmount);
+      const data = await depositToWallet(amount);
       
-      const result = await depositToWallet(depositAmount);
+      setBalance(data.balance);
+      setDepositAmount('');
+      setSuccessMessage('¡Depósito realizado con éxito!');
+      setError('');
+      setRetryAvailable(false);
+      setLastDepositAmount('');
       
-      setBalance(result.balance);
-      alert(`Successfully deposited $${depositAmount}`);
-      setDepositAmount(100); // Reset to default
-    } catch (error) {
-      console.error("Deposit error:", error);
-      setError("Failed to process deposit");
+      // Limpiar mensaje de éxito después de 3 segundos
+      setTimeout(() => setSuccessMessage(''), 3000);
+    } catch (err) {
+      setError('Error al realizar el depósito. Puedes intentar una vez más.');
+      setRetryAvailable(true);
+      setLastDepositAmount(depositAmount);
     } finally {
-      setDepositing(false);
+      setLoading(false);
+    }
+  };
+  
+  // Añadir función de reintento
+  const handleRetry = async () => {
+    if (!lastDepositAmount) return;
+    
+    try {
+      setLoading(true);
+      const amount = parseFloat(lastDepositAmount);
+      const data = await depositToWallet(amount);
+      
+      setBalance(data.balance);
+      setDepositAmount('');
+      setSuccessMessage('¡Depósito realizado con éxito en el reintento!');
+      setError('');
+      setRetryAvailable(false);
+      setLastDepositAmount('');
+      
+      setTimeout(() => setSuccessMessage(''), 3000);
+    } catch (err) {
+      setError('El depósito falló definitivamente después del reintento.');
+      setRetryAvailable(false);
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (loading) return <div>Loading wallet...</div>;
-
-  if (!isAuthenticated) {
-    return (
-      <div className="wallet-container">
-        <h2>My Wallet</h2>
-        <p>Please log in to access your wallet</p>
-        <button onClick={() => loginWithRedirect()}>Login</button>
-      </div>
-    );
-  }
-
   return (
     <div className="wallet-container">
-      <h2>My Wallet</h2>
+      <h2>Mi Billetera</h2>
       
-      <div className="wallet-balance">
-        <h3>Current Balance: ${balance.toFixed(2)}</h3>
-      </div>
+      {loading && <p>Cargando...</p>}
       
-      <div className="deposit-form">
-        <h3>Add Funds</h3>
-        
-        <div className="form-group">
-          <label htmlFor="amount">Amount ($):</label>
-          <input
-            type="number"
-            id="amount"
-            min="10"
-            value={depositAmount}
-            onChange={(e) => setDepositAmount(parseFloat(e.target.value))}
-          />
+      {error && (
+        <div className="error-message">
+          {error}
+          {retryAvailable && (
+            <button 
+              onClick={handleRetry} 
+              className="retry-button"
+              disabled={loading}
+            >
+              Reintentar depósito
+            </button>
+          )}
         </div>
+      )}
+      {successMessage && <div className="success-message">{successMessage}</div>}
+      
+      <div className="wallet-info">
+        <h3>Saldo disponible: ${balance}</h3>
         
-        {error && <p className="error">{error}</p>}
-        
-        <button 
-          onClick={handleDeposit} 
-          disabled={depositing || depositAmount <= 0}
-        >
-          {depositing ? "Processing..." : "Deposit"}
-        </button>
+        <form onSubmit={handleDeposit}>
+          <div className="form-group">
+            <label htmlFor="deposit-amount">Monto a depositar:</label>
+            <input
+              id="deposit-amount"
+              type="number"
+              min="1"
+              step="0.01"
+              value={depositAmount}
+              onChange={(e) => setDepositAmount(e.target.value)}
+              placeholder="Ingresa el monto"
+              disabled={loading}
+            />
+          </div>
+          <button type="submit" disabled={loading}>
+            Recargar saldo
+          </button>
+        </form>
       </div>
     </div>
   );

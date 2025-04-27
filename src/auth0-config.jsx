@@ -9,7 +9,8 @@ export const getAuth0Client = async () => {
       clientId: import.meta.env.VITE_AUTH0_CLIENT_ID,
       authorizationParams: {
         redirect_uri: window.location.origin,
-        audience: "https://stockmarket-api/"
+        audience: "https://stockmarket-api/",
+        scope: "openid profile email" // Añadir scope para asegurar que se incluya el sub
       }
     });
   }

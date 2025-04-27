@@ -32,17 +32,74 @@ export const getWalletBalance = async () => {
 
 export const depositToWallet = async (amount) => {
   try {
-    const token = await getToken();
-    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    // Primero, asegurarse de que el usuario esté registrado
+    await registerUserIfNeeded();
     
+    const token = await getToken();
+    
+    if (!token) {
+      throw new Error("No se pudo obtener un token de autenticación");
+    }
+    
+    // Obtener el perfil del usuario para enviar el ID de Auth0 como respaldo
+    const auth0 = await getAuth0Client();
+    const user = await auth0.getUser();
+    
+    const headers = { Authorization: `Bearer ${token}` };
+    
+    // Incluir el ID de Auth0 en el body como respaldo
     const response = await axios.post(
       `${API_URL}/wallet/deposit`,
-      { amount },
+      { 
+        amount,
+        auth0Id: user.sub // Incluye el ID de Auth0 como respaldo
+      },
       { headers }
     );
     return response.data;
   } catch (err) {
-    console.error("Error depositing to wallet:", err);
+    console.error("Error al depositar:", err);
     throw err;
+  }
+};
+
+export const registerUserIfNeeded = async () => {
+  try {
+    const token = await getToken();
+    if (!token) return false;
+    
+    const headers = { Authorization: `Bearer ${token}` };
+    
+    // Obtener datos del usuario de Auth0
+    const auth0 = await getAuth0Client();
+    const user = await auth0.getUser();
+    
+    console.log("Datos de usuario de Auth0:", user);
+    
+    // Si no tenemos email o name, no podemos registrar
+    if (!user.email) {
+      console.error("No se pudo obtener email del usuario");
+      return false;
+    }
+    
+    // Intentar registrar al usuario si no existe
+    await axios.post(
+      `${API_URL}/users/register`, 
+      { 
+        name: user.name || user.nickname || "Usuario", 
+        email: user.email 
+      },
+      { headers }
+    );
+    
+    return true;
+  } catch (err) {
+    // Si el error es porque el usuario ya existe (código 409), retornamos true
+    if (err.response && err.response.status === 409) {
+      console.log("Usuario ya registrado");
+      return true;
+    }
+    console.error("Error verificando registro:", err);
+    return false;
   }
 };

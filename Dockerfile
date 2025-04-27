@@ -8,6 +8,7 @@ COPY package*.json ./
 
 # Instalar dependencias
 RUN npm install
+RUN npm install auth0@latest
 
 # Copiar el resto de los archivos del proyecto
 COPY . .

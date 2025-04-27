@@ -1,8 +1,9 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { useAuth0 } from '@auth0/auth0-react';
 import { LoginButton, LogoutButton, Profile } from './components/AuthComponents';
-import TestStocks from './testStocks'; // Esta es la vista de listado de stocks, más adelante renombrarás
-import MyPurchases from './pages/MyPurchases'; // Vas a crear esta carpeta y estos archivos
+import Navigation from './components/Navigation';
+import TestStocks from './testStocks';
+import MyPurchases from './pages/MyPurchases';
 import Wallet from './pages/Wallet';
 import StockDetail from './pages/StockDetail';
 import EventLog from './pages/EventLog';
@@ -17,12 +18,22 @@ function App() {
   return (
     <Router>
       <div className="app-container">
-        {isAuthenticated ? (
-          <>
-            <header>
-              <Profile />
-              <LogoutButton />
-            </header>
+      {isAuthenticated ? (
+      <>
+        <header className="app-header">
+          <div className="user-profile">
+            <Profile />
+          </div>
+          <nav className="main-nav">
+            <Link to="/stocks">Stocks</Link>
+            <Link to="/my-purchases">Mis Compras</Link>
+            <Link to="/wallet">Billetera</Link>
+            <Link to="/event-log">Registro de Eventos</Link>
+          </nav>
+          <div className="logout-button">
+            <LogoutButton />
+          </div>
+        </header>
             <main>
               <Routes>
                 <Route path="/" element={<Navigate to="/stocks" />} />
