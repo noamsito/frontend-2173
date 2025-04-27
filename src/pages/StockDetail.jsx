@@ -11,6 +11,7 @@ const StockDetail = () => {
   const [quantity, setQuantity] = useState(1);
   const [wallet, setWallet] = useState({ balance: 0 });
   const [buyingStatus, setBuyingStatus] = useState({ loading: false, error: '', success: '' });
+  const [retryData, setRetryData] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -70,6 +71,8 @@ const StockDetail = () => {
         success: `¡Compra exitosa! ID de solicitud: ${result.request_id}`
       });
       
+      setRetryData(null); // Limpiar datos de reintento si fue exitoso
+      
       // Actualizar wallet y stock después de la compra
       const [newStockData, newWalletData] = await Promise.all([
         getStockBySymbol(symbol),
@@ -85,14 +88,55 @@ const StockDetail = () => {
       }, 3000);
       
     } catch (err) {
+      // Guardar datos para posible reintento
+      setRetryData({ symbol, quantity });
       setBuyingStatus({
         loading: false,
-        error: err.response?.data?.error || 'Error al procesar la compra',
+        error: err.response?.data?.error || 'Error al procesar la compra. Puede intentar nuevamente.',
         success: ''
       });
     }
   };
 
+  const handleRetry = async () => {
+    if (!retryData) return;
+    
+    // Solo permitir un reintento
+    const { symbol: retrySymbol, quantity: retryQuantity } = retryData;
+    setRetryData(null);
+    
+    try {
+      setBuyingStatus({ loading: true, error: '', success: '' });
+      
+      const result = await buyStock(retrySymbol, retryQuantity);
+      
+      setBuyingStatus({
+        loading: false,
+        error: '',
+        success: `¡Compra exitosa en el reintento! ID de solicitud: ${result.request_id}`
+      });
+      
+      // Actualizar wallet y stock
+      const [newStockData, newWalletData] = await Promise.all([
+        getStockBySymbol(symbol),
+        getWalletBalance()
+      ]);
+      
+      setStock(newStockData.data);
+      setWallet(newWalletData);
+      
+      setTimeout(() => {
+        navigate('/my-purchases');
+      }, 3000);
+      
+    } catch (err) {
+      setBuyingStatus({
+        loading: false,
+        error: 'La operación falló definitivamente después del reintento.',
+        success: ''
+      });
+    }
+  };
   if (loading) return <div>Cargando detalles...</div>;
   
   if (!stock || stock.length === 0) {
@@ -160,7 +204,18 @@ const StockDetail = () => {
           </div>
           
           {buyingStatus.error && (
-            <div className="error-message">{buyingStatus.error}</div>
+            <div className="error-message">
+              {buyingStatus.error}
+              {retryData && (
+                <button 
+                  onClick={handleRetry} 
+                  className="retry-button"
+                  disabled={buyingStatus.loading}
+                >
+                  Reintentar compra
+                </button>
+              )}
+            </div>
           )}
           
           {buyingStatus.success && (

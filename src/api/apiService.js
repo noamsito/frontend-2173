@@ -21,13 +21,32 @@ const getAuthHeaders = async () => {
 };
 
 // API de Stocks
-export const getStocks = async (page = 1, count = 25) => {
+
+// Modificar la función getStocks para aceptar filtros
+
+export const getStocks = async (params = {}) => {
   try {
     const headers = await getAuthHeaders();
-    const response = await axios.get(
-      `${API_URL}/stocks?page=${page}&count=${count}`,
-      { headers }
-    );
+    
+    // Construir query string con todos los parámetros
+    const queryParams = new URLSearchParams();
+    
+    // Parámetros de paginación
+    if (params.page) queryParams.append('page', params.page);
+    if (params.count) queryParams.append('count', params.count);
+    
+    // Parámetros de filtro
+    if (params.symbol) queryParams.append('symbol', params.symbol);
+    if (params.name) queryParams.append('name', params.name);
+    if (params.minPrice) queryParams.append('minPrice', params.minPrice);
+    if (params.maxPrice) queryParams.append('maxPrice', params.maxPrice);
+    if (params.minQuantity) queryParams.append('minQuantity', params.minQuantity);
+    if (params.maxQuantity) queryParams.append('maxQuantity', params.maxQuantity);
+    if (params.date) queryParams.append('date', params.date);
+    
+    const url = `${API_URL}/stocks?${queryParams.toString()}`;
+    
+    const response = await axios.get(url, { headers });
     return response.data;
   } catch (err) {
     console.error("Error al obtener stocks:", err);

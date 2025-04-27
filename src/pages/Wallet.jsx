@@ -7,6 +7,8 @@ const Wallet = () => {
   const [depositAmount, setDepositAmount] = useState('');
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [retryAvailable, setRetryAvailable] = useState(false);
+  const [lastDepositAmount, setLastDepositAmount] = useState('');
 
   useEffect(() => {
     fetchBalance();
@@ -32,20 +34,50 @@ const Wallet = () => {
       setError('Por favor, ingresa un monto válido mayor a cero.');
       return;
     }
-
+  
     try {
       setLoading(true);
-      const data = await depositToWallet(parseFloat(depositAmount));
+      const amount = parseFloat(depositAmount);
+      const data = await depositToWallet(amount);
+      
       setBalance(data.balance);
       setDepositAmount('');
       setSuccessMessage('¡Depósito realizado con éxito!');
       setError('');
+      setRetryAvailable(false);
+      setLastDepositAmount('');
       
       // Limpiar mensaje de éxito después de 3 segundos
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (err) {
-      setError('Error al realizar el depósito. Por favor, intenta de nuevo.');
-      console.error(err);
+      setError('Error al realizar el depósito. Puedes intentar una vez más.');
+      setRetryAvailable(true);
+      setLastDepositAmount(depositAmount);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Añadir función de reintento
+  const handleRetry = async () => {
+    if (!lastDepositAmount) return;
+    
+    try {
+      setLoading(true);
+      const amount = parseFloat(lastDepositAmount);
+      const data = await depositToWallet(amount);
+      
+      setBalance(data.balance);
+      setDepositAmount('');
+      setSuccessMessage('¡Depósito realizado con éxito en el reintento!');
+      setError('');
+      setRetryAvailable(false);
+      setLastDepositAmount('');
+      
+      setTimeout(() => setSuccessMessage(''), 3000);
+    } catch (err) {
+      setError('El depósito falló definitivamente después del reintento.');
+      setRetryAvailable(false);
     } finally {
       setLoading(false);
     }
@@ -57,7 +89,20 @@ const Wallet = () => {
       
       {loading && <p>Cargando...</p>}
       
-      {error && <div className="error-message">{error}</div>}
+      {error && (
+        <div className="error-message">
+          {error}
+          {retryAvailable && (
+            <button 
+              onClick={handleRetry} 
+              className="retry-button"
+              disabled={loading}
+            >
+              Reintentar depósito
+            </button>
+          )}
+        </div>
+      )}
       {successMessage && <div className="success-message">{successMessage}</div>}
       
       <div className="wallet-info">
