@@ -99,19 +99,20 @@ const EventLog = () => {
 };
 
 // Función para generar texto por defecto si no hay event_text
+// Función para generar texto por defecto si no hay event_text
 function getDefaultEventText(event) {
   const details = event.details;
   
   switch(event.type) {
     case 'IPO':
-      return `Se realizó una IPO de ${details.quantity || ''} acciones de ${details.symbol || ''} a un precio de $${details.price || ''}`;
+      return `Se realizó una IPO de ${details.quantity || ''} acciones de ${details.symbol || ''} (${details.long_name || ''}) a un precio de $${details.price || ''}`;
     
     case 'EMIT':
-      return `Se realizó un EMIT de ${details.quantity || ''} acciones adicionales de ${details.symbol || ''}`;
+      return `Se realizó un EMIT de ${details.quantity || ''} acciones adicionales de ${details.symbol || ''} (${details.long_name || ''}) a un precio de $${details.price || ''}`;
     
     case 'PURCHASE_VALIDATION':
       if (details.status === 'ACCEPTED') {
-        return `Compraste acciones exitosamente`;
+        return `Compraste ${details.quantity || ''} acciones de ${details.symbol || ''} por un total de $${(details.quantity * details.price).toFixed(2) || ''}`;
       }
       return '';
     
