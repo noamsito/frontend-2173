@@ -11,6 +11,7 @@ const StockDetail = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth0();
   const [stock, setStock] = useState(null);
+  const [priceHistory, setPriceHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [walletBalance, setWalletBalance] = useState(0);
@@ -21,7 +22,20 @@ const StockDetail = () => {
     const fetchData = async () => {
       try {
         const stockData = await getStocksbySymbol(symbol);
-        setStock(stockData.data);
+        
+        // The first entry is the most recent
+        if (stockData.data && stockData.data.length > 0) {
+          setStock(stockData.data[0]);
+          
+          // Set price history from all entries
+          const history = stockData.data.map(entry => ({
+            price: entry.price,
+            timestamp: entry.timestamp,
+            kind: entry.kind || 'REGULAR'
+          }));
+          
+          setPriceHistory(history);
+        }
         
         if (isAuthenticated) {
           const walletData = await getWalletBalance();
@@ -49,7 +63,7 @@ const StockDetail = () => {
       return;
     }
 
-    const totalCost = stock[0].price * quantity;
+    const totalCost = stock.price * quantity;
     if (totalCost > walletBalance) {
       setError("Insufficient funds in wallet");
       return;
@@ -73,19 +87,50 @@ const StockDetail = () => {
 
   if (loading) return <div>Loading details...</div>;
   
-  if (!stock || stock.length === 0) return <div>No data found for {symbol}</div>;
+  if (!stock) return <div>No data found for {symbol}</div>;
 
   return (
     <div className="stock-detail-container">
       <h2>Details for {symbol}</h2>
       
       <div className="stock-info">
-        <h3>{stock[0].short_name}</h3>
-        <p>Long name: {stock[0].long_name}</p>
-        <p>Current price: ${stock[0].price.toFixed(2)}</p>
-        <p>Available: {stock[0].quantity} shares</p>
-        <p>Last updated: {new Date(stock[0].timestamp).toLocaleString()}</p>
+        <h3>{stock.short_name}</h3>
+        <p>Long name: {stock.long_name}</p>
+        <p>Current price: ${stock.price.toFixed(2)}</p>
+        <p>Available: {stock.quantity} shares</p>
+        <p>Last updated: {new Date(stock.timestamp).toLocaleString()}</p>
+        {stock.kind && (
+          <p>Origin: <span className={`tag tag-${stock.kind.toLowerCase()}`}>{stock.kind}</span></p>
+        )}
       </div>
+      
+      {priceHistory.length > 1 && (
+        <div className="price-history">
+          <h3>Price History</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Price</th>
+                <th>Event Type</th>
+              </tr>
+            </thead>
+            <tbody>
+              {priceHistory.map((entry, index) => (
+                <tr key={index}>
+                  <td>{new Date(entry.timestamp).toLocaleString()}</td>
+                  <td>${entry.price.toFixed(2)}</td>
+                  <td>
+                    <span className={`tag tag-${entry.kind.toLowerCase()}`}>
+                      {entry.kind}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
       
       {isAuthenticated && (
         <div className="purchase-form">
@@ -98,21 +143,21 @@ const StockDetail = () => {
               type="number"
               id="quantity"
               min="1"
-              max={stock[0].quantity}
+              max={stock.quantity}
               value={quantity}
               onChange={(e) => setQuantity(parseInt(e.target.value))}
             />
           </div>
           
           <div className="price-calculation">
-            <p>Total cost: ${(stock[0].price * quantity).toFixed(2)}</p>
+            <p>Total cost: ${(stock.price * quantity).toFixed(2)}</p>
           </div>
           
           {error && <p className="error">{error}</p>}
           
           <button 
             onClick={handlePurchase} 
-            disabled={purchasing || quantity <= 0 || quantity > stock[0].quantity}
+            disabled={purchasing || quantity <= 0 || quantity > stock.quantity}
           >
             {purchasing ? "Processing..." : "Buy Now"}
           </button>

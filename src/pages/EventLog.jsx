@@ -13,6 +13,7 @@ const EventLog = () => {
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [filter, setFilter] = useState('ALL');
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -20,7 +21,7 @@ const EventLog = () => {
     } else {
       setLoading(false);
     }
-  }, [isAuthenticated, page]);
+  }, [isAuthenticated, page, filter]);
 
   const fetchEvents = async () => {
     try {
@@ -29,8 +30,9 @@ const EventLog = () => {
       const token = await getToken();
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
       
+      const filterParam = filter !== 'ALL' ? `&type=${filter}` : '';
       const response = await axios.get(
-        `${API_URL}/events?page=${page}&count=25`,
+        `${API_URL}/events?page=${page}&count=25${filterParam}`,
         { headers }
       );
       
@@ -65,11 +67,59 @@ const EventLog = () => {
 
   const getEventIcon = (type) => {
     switch (type) {
-      case 'STOCK_UPDATE': return '📊';
+      case 'UPDATE': return '📊';
       case 'IPO': return '🚀';
       case 'EMIT': return '🔄';
       case 'PURCHASE_REQUEST': return '🛒';
+      case 'ACCEPTED': return '✅';
+      case 'REJECTED': return '❌';
       default: return '📝';
+    }
+  };
+
+  const formatEventDetails = (event) => {
+    const { type, details } = event;
+    
+    switch (type) {
+      case 'IPO':
+        return (
+          <div>
+            <p><strong>Symbol:</strong> {details.symbol}</p>
+            <p><strong>Name:</strong> {details.shortName}</p>
+            <p><strong>Price:</strong> ${details.price?.toFixed(2)}</p>
+            <p><strong>Quantity:</strong> {details.quantity}</p>
+          </div>
+        );
+      case 'EMIT':
+        return (
+          <div>
+            <p><strong>Symbol:</strong> {details.symbol}</p>
+            <p><strong>New Price:</strong> ${details.price?.toFixed(2)}</p>
+            <p><strong>Added Quantity:</strong> {details.quantity}</p>
+          </div>
+        );
+      case 'UPDATE':
+        return (
+          <div>
+            <p><strong>Symbol:</strong> {details.symbol}</p>
+            <p><strong>New Price:</strong> ${details.price?.toFixed(2)}</p>
+          </div>
+        );
+      case 'PURCHASE_REQUEST':
+        return (
+          <div>
+            <p><strong>Request ID:</strong> {details.request_id}</p>
+            <p><strong>Symbol:</strong> {details.symbol}</p>
+            <p><strong>Quantity:</strong> {details.quantity}</p>
+            <p><strong>Status:</strong> {details.status || 'PENDING'}</p>
+          </div>
+        );
+      default:
+        return (
+          <pre className="event-details">
+            {JSON.stringify(details, null, 2)}
+          </pre>
+        );
     }
   };
 
@@ -89,6 +139,23 @@ const EventLog = () => {
     <div className="event-log-container">
       <h2>Event Log</h2>
       
+      <div className="event-filters">
+        <select 
+          value={filter} 
+          onChange={(e) => {
+            setFilter(e.target.value);
+            setPage(1);
+            setHasMore(true);
+          }}
+        >
+          <option value="ALL">All Events</option>
+          <option value="IPO">IPO Events</option>
+          <option value="EMIT">EMIT Events</option>
+          <option value="UPDATE">Price Updates</option>
+          <option value="PURCHASE_REQUEST">Purchase Requests</option>
+        </select>
+      </div>
+      
       {error && <p className="error">{error}</p>}
       
       {events.length > 0 ? (
@@ -102,9 +169,7 @@ const EventLog = () => {
                   <p className="event-time">
                     {new Date(event.created_at).toLocaleString()}
                   </p>
-                  <pre className="event-details">
-                    {JSON.stringify(event.details, null, 2)}
-                  </pre>
+                  {formatEventDetails(event)}
                 </div>
               </li>
             ))}
