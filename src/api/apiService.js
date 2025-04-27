@@ -116,15 +116,33 @@ export const getUserPurchases = async () => {
 
 // API de Eventos
 export const getEvents = async (page = 1, count = 25, type = 'ALL') => {
-  try {
-    const headers = await getAuthHeaders();
-    const response = await axios.get(
-      `${API_URL}/events?page=${page}&count=${count}&type=${type}`,
-      { headers }
-    );
-    return response.data;
-  } catch (err) {
-    console.error("Error al obtener eventos:", err);
-    throw err;
-  }
-};
+    try {
+      const headers = await getAuthHeaders();
+      const response = await axios.get(
+        `${API_URL}/events?page=${page}&count=${count}&type=${type}`,
+        { headers }
+      );
+      
+      // Procesar las fechas y asegurar que details sea un objeto
+      const events = response.data.data.map(event => {
+        // Si details es un string, convertirlo a objeto
+        if (typeof event.details === 'string') {
+          try {
+            event.details = JSON.parse(event.details);
+          } catch (e) {
+            console.error("Error al parsear detalles del evento:", e);
+          }
+        }
+        
+        return {
+          ...event,
+          formatted_date: new Date(event.created_at).toLocaleString()
+        };
+      });
+      
+      return { data: events };
+    } catch (err) {
+      console.error("Error al obtener eventos:", err);
+      throw err;
+    }
+  };

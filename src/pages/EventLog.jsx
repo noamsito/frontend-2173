@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getEvents } from '../api/apiService';
+import '../styles/EventLog.css';
 
 const EventLog = () => {
   const [events, setEvents] = useState([]);
@@ -26,19 +27,22 @@ const EventLog = () => {
     }
   };
 
-  const handlePrevPage = () => {
-    if (page > 1) setPage(page - 1);
-  };
-
-  const handleNextPage = () => {
-    setPage(page + 1);
+  // Obtener el ícono según el tipo de evento
+  const getEventIcon = (type) => {
+    switch(type) {
+      case 'IPO': return '🚀';
+      case 'EMIT': return '📈';
+      case 'PURCHASE_VALIDATION': return '✅';
+      case 'EXTERNAL_PURCHASE': return '🌐';
+      default: return '📝';
+    }
   };
 
   return (
-    <div className="events-container">
+    <div className="event-log-container">
       <h2>Registro de Eventos</h2>
       
-      <div className="filters">
+      <div className="event-filters">
         <label>
           Tipo de evento:
           <select 
@@ -47,9 +51,9 @@ const EventLog = () => {
             disabled={loading}
           >
             <option value="ALL">Todos</option>
-            <option value="WALLET_DEPOSIT">Depósitos en billetera</option>
-            <option value="PURCHASE_REQUEST">Solicitudes de compra</option>
-            <option value="PURCHASE_VALIDATION">Validaciones de compra</option>
+            <option value="IPO">Nuevas acciones (IPO)</option>
+            <option value="EMIT">Emisiones adicionales</option>
+            <option value="PURCHASE_VALIDATION">Compras exitosas</option>
             <option value="EXTERNAL_PURCHASE">Compras externas</option>
           </select>
         </label>
@@ -66,19 +70,25 @@ const EventLog = () => {
       {events.length > 0 && (
         <div className="events-list">
           {events.map((event) => (
-            <div key={event.id} className="event-card">
-              <h3>{event.type}</h3>
-              <p>Fecha: {new Date(event.created_at).toLocaleString()}</p>
-              <pre>{JSON.stringify(event.details, null, 2)}</pre>
+            <div key={event.id} className="event-item">
+              <div className="event-icon">
+                {getEventIcon(event.type)}
+              </div>
+              <div className="event-content">
+                <div className="event-time">{event.formatted_date}</div>
+                <div className="event-message">
+                  {event.details.event_text || getDefaultEventText(event)}
+                </div>
+              </div>
             </div>
           ))}
           
           <div className="pagination">
-            <button onClick={handlePrevPage} disabled={page === 1 || loading}>
+            <button onClick={() => setPage(prev => Math.max(1, prev - 1))} disabled={page === 1 || loading}>
               Anterior
             </button>
             <span>Página {page}</span>
-            <button onClick={handleNextPage} disabled={events.length < 25 || loading}>
+            <button onClick={() => setPage(prev => prev + 1)} disabled={events.length < 25 || loading}>
               Siguiente
             </button>
           </div>
@@ -87,5 +97,30 @@ const EventLog = () => {
     </div>
   );
 };
+
+// Función para generar texto por defecto si no hay event_text
+function getDefaultEventText(event) {
+  const details = event.details;
+  
+  switch(event.type) {
+    case 'IPO':
+      return `Se realizó una IPO de ${details.quantity || ''} acciones de ${details.symbol || ''} a un precio de $${details.price || ''}`;
+    
+    case 'EMIT':
+      return `Se realizó un EMIT de ${details.quantity || ''} acciones adicionales de ${details.symbol || ''}`;
+    
+    case 'PURCHASE_VALIDATION':
+      if (details.status === 'ACCEPTED') {
+        return `Compraste acciones exitosamente`;
+      }
+      return '';
+    
+    case 'EXTERNAL_PURCHASE':
+      return `El grupo ${details.group_id || ''} compró ${details.quantity || ''} acciones de ${details.symbol || ''}`;
+    
+    default:
+      return JSON.stringify(details);
+  }
+}
 
 export default EventLog;
