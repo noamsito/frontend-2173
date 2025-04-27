@@ -5,10 +5,11 @@ let auth0Client;
 export const getAuth0Client = async () => {
   if (!auth0Client) {
     auth0Client = await createAuth0Client({
-      domain: import.meta.env.VITE_AUTH0_DOMAIN,
-      clientId: import.meta.env.VITE_AUTH0_CLIENT_ID,
+      domain: "dev-ouxdigl1l6bn6n3r.us.auth0.com",
+      clientId: "ioEcob7KVSQ883eYRrY0gnyknMFJDRCt",
       authorizationParams: {
-        redirect_uri: window.location.origin
+        redirect_uri: window.location.origin,
+        audience: "https://stockmarket-api/"
       }
     });
   }
