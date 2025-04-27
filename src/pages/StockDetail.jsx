@@ -94,8 +94,7 @@ const StockDetail = () => {
       <h2>Details for {symbol}</h2>
       
       <div className="stock-info">
-        <h3>{stock.short_name}</h3>
-        <p>Long name: {stock.long_name}</p>
+        <h3>{stock.long_name}</h3>
         <p>Current price: ${stock.price.toFixed(2)}</p>
         <p>Available: {stock.quantity} shares</p>
         <p>Last updated: {new Date(stock.timestamp).toLocaleString()}</p>

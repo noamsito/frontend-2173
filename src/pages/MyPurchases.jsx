@@ -80,7 +80,7 @@ const MyPurchases = () => {
                       {purchase.symbol}
                     </Link>
                   </td>
-                  <td>{purchase.short_name}</td>
+                  <td>{purchase.long_name}</td>
                   <td>{purchase.quantity}</td>
                   <td>${purchase.price.toFixed(2)}</td>
                   <td>${(purchase.price * purchase.quantity).toFixed(2)}</td>

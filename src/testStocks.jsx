@@ -22,7 +22,6 @@ export default function TestStocks() {
     // Filtrar stocks por término de búsqueda
     const filteredStocks = stocks.filter(stock => 
         stock.symbol?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        stock.short_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         stock.long_name?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
@@ -78,7 +77,7 @@ export default function TestStocks() {
                         <thead>
                             <tr>
                                 <th>Símbolo</th>
-                                <th>Nombre corto</th>
+                                <th>Nombre</th>
                                 <th>Precio</th>
                                 <th>Cantidad</th>
                                 <th>Origen</th>
@@ -94,7 +93,7 @@ export default function TestStocks() {
                                                 {stock.symbol}
                                             </Link>
                                         </td>
-                                        <td>{stock.short_name}</td>
+                                        <td>{stock.long_name}</td>
                                         <td>${stock.price?.toFixed(2) || 'N/A'}</td>
                                         <td>{stock.quantity}</td>
                                         <td>
