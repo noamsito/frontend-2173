@@ -76,45 +76,35 @@ export default function TestStocks() {
                     <table>
                         <thead>
                             <tr>
-                                <th>Símbolo</th>
-                                <th>Nombre</th>
-                                <th>Precio</th>
-                                <th>Cantidad</th>
-                                <th>Origen</th>
-                                <th>Última actualización</th>
+                            <th>Símbolo</th>
+                            <th>Nombre</th>
+                            <th>Precio</th>
+                            <th>Cantidad</th>
+                            <th>Última actualización</th>
                             </tr>
                         </thead>
                         <tbody>
                             {filteredStocks.length > 0 ? (
-                                filteredStocks.map((stock, i) => (
-                                    <tr key={i}>
-                                        <td>
-                                            <Link to={`/stocks/${stock.symbol}`}>
-                                                {stock.symbol}
-                                            </Link>
-                                        </td>
-                                        <td>{stock.long_name}</td>
-                                        <td>${stock.price?.toFixed(2) || 'N/A'}</td>
-                                        <td>{stock.quantity}</td>
-                                        <td>
-                                            {stock.kind === "IPO" ? (
-                                                <span className="tag tag-ipo">IPO</span>
-                                            ) : stock.kind === "EMIT" ? (
-                                                <span className="tag tag-emit">EMIT</span>
-                                            ) : (
-                                                <span className="tag tag-regular">Regular</span>
-                                            )}
-                                        </td>
-                                        <td>{new Date(stock.timestamp).toLocaleString()}</td>
-                                    </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td colSpan="6">No se encontraron stocks</td>
+                            filteredStocks.map((stock, i) => (
+                                <tr key={i}>
+                                <td>
+                                    <Link to={`/stocks/${stock.symbol}`}>
+                                    {stock.symbol}
+                                    </Link>
+                                </td>
+                                <td>{stock.long_name}</td>
+                                <td>${stock.price?.toFixed(2) || 'N/A'}</td>
+                                <td>{stock.quantity}</td>
+                                <td>{new Date(stock.timestamp).toLocaleString()}</td>
                                 </tr>
+                            ))
+                            ) : (
+                            <tr>
+                                <td colSpan="5">No se encontraron stocks</td>
+                            </tr>
                             )}
                         </tbody>
-                    </table>
+                        </table>
                 </div>
             )}
         </div>

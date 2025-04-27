@@ -111,7 +111,6 @@ const StockDetail = () => {
               <tr>
                 <th>Date</th>
                 <th>Price</th>
-                <th>Event Type</th>
               </tr>
             </thead>
             <tbody>
@@ -119,11 +118,6 @@ const StockDetail = () => {
                 <tr key={index}>
                   <td>{new Date(entry.timestamp).toLocaleString()}</td>
                   <td>${entry.price.toFixed(2)}</td>
-                  <td>
-                    <span className={`tag tag-${entry.kind.toLowerCase()}`}>
-                      {entry.kind}
-                    </span>
-                  </td>
                 </tr>
               ))}
             </tbody>
