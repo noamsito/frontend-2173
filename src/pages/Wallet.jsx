@@ -37,24 +37,34 @@ const Wallet = () => {
       loginWithRedirect();
       return;
     }
-
+  
     if (depositAmount <= 0) {
-      setError("Please enter a valid amount");
+      setError("Por favor ingresa una cantidad válida");
       return;
     }
-
+  
     try {
       setDepositing(true);
       setError(null);
       
+      // Primero registrar al usuario si no existe
+      const registered = await registerUserIfNeeded();
+      
+      if (!registered) {
+        setError("No se pudo registrar tu cuenta. Por favor intenta de nuevo.");
+        setDepositing(false);
+        return;
+      }
+      
       const result = await depositToWallet(depositAmount);
       
       setBalance(result.balance);
-      alert(`Successfully deposited $${depositAmount}`);
-      setDepositAmount(100); // Reset to default
+      alert(`Depósito exitoso de $${depositAmount}`);
+      setDepositAmount(100); // Resetear al valor por defecto
     } catch (error) {
-      console.error("Deposit error:", error);
-      setError("Failed to process deposit");
+      console.error("Error en el depósito:", error);
+      setError("No se pudo procesar el depósito. " + 
+               (error.response?.data?.error || "Intenta de nuevo más tarde."));
     } finally {
       setDepositing(false);
     }
