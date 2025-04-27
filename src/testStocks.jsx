@@ -1,112 +1,112 @@
-// src/testStocks.jsx
 import { useEffect, useState } from "react";
-import { getStocks } from "./api/stocks";
 import { Link } from "react-router-dom";
+import { getStocks } from "./api/apiService";
 
 export default function TestStocks() {
     const [stocks, setStocks] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
     const [page, setPage] = useState(1);
     const [count, setCount] = useState(25);
-    const [searchTerm, setSearchTerm] = useState("");
 
     useEffect(() => {
-        setLoading(true);
-        getStocks(page, count).then((data) => {
-            console.log("Respuesta del backend:", data);
-            setStocks(data.data || []);
-            setLoading(false);
-        });
+        fetchStocks();
     }, [page, count]);
 
-    // Filtrar stocks por término de búsqueda
-    const filteredStocks = stocks.filter(stock => 
-        stock.symbol?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        stock.long_name?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const fetchStocks = async () => {
+        try {
+            setLoading(true);
+            const data = await getStocks(page, count);
+            setStocks(data.data || []);
+            setError('');
+        } catch (err) {
+            setError('Error al cargar los stocks. Por favor, intenta de nuevo.');
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handlePrevPage = () => {
+        if (page > 1) setPage(page - 1);
+    };
+
+    const handleNextPage = () => {
+        setPage(page + 1);
+    };
 
     return (
         <div className="stocks-container">
-            <h2>Stocks disponibles</h2>
+            <h2>Listado de Stocks Disponibles</h2>
             
-            <div className="search-filters">
-                <input
-                    type="text"
-                    placeholder="Buscar por símbolo o nombre..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="search-input"
-                />
+            {loading && <p>Cargando stocks...</p>}
+            
+            {error && <div className="error-message">{error}</div>}
+            
+            <div className="filters">
+                <label>
+                    Items por página:
+                    <select 
+                        value={count} 
+                        onChange={(e) => setCount(parseInt(e.target.value))}
+                        disabled={loading}
+                    >
+                        <option value="10">10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </label>
             </div>
             
-            <div className="pagination-controls">
-                <select 
-                    value={count} 
-                    onChange={(e) => {
-                        setCount(Number(e.target.value));
-                        setPage(1); // Reset to page 1 when changing items per page
-                    }}
-                >
-                    <option value={10}>10 por página</option>
-                    <option value={25}>25 por página</option>
-                    <option value={50}>50 por página</option>
-                </select>
-                
-                <div className="page-buttons">
-                    <button 
-                        onClick={() => setPage(p => Math.max(1, p - 1))}
-                        disabled={page === 1 || loading}
-                    >
-                        &laquo; Anterior
-                    </button>
-                    <span>Página {page}</span>
-                    <button 
-                        onClick={() => setPage(p => p + 1)}
-                        disabled={filteredStocks.length < count || loading}
-                    >
-                        Siguiente &raquo;
-                    </button>
-                </div>
-            </div>
+            {!loading && stocks.length === 0 && !error && (
+                <p>No hay stocks disponibles</p>
+            )}
             
-            {loading ? (
-                <p>Cargando stocks...</p>
-            ) : (
+            {stocks.length > 0 && (
                 <div className="stocks-list">
                     <table>
                         <thead>
                             <tr>
-                            <th>Símbolo</th>
-                            <th>Nombre</th>
-                            <th>Precio</th>
-                            <th>Cantidad</th>
-                            <th>Última actualización</th>
+                                <th>Símbolo</th>
+                                <th>Nombre</th>
+                                <th>Precio</th>
+                                <th>Cantidad</th>
+                                <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {filteredStocks.length > 0 ? (
-                            filteredStocks.map((stock, i) => (
-                                <tr key={i}>
-                                <td>
-                                    <Link to={`/stocks/${stock.symbol}`}>
-                                    {stock.symbol}
-                                    </Link>
-                                </td>
-                                <td>{stock.long_name}</td>
-                                <td>${stock.price?.toFixed(2) || 'N/A'}</td>
-                                <td>{stock.quantity}</td>
-                                <td>{new Date(stock.timestamp).toLocaleString()}</td>
+                            {stocks.map((stock) => (
+                                <tr key={stock.id}>
+                                    <td>{stock.symbol}</td>
+                                    <td>{stock.long_name}</td>
+                                    <td>${stock.price}</td>
+                                    <td>{stock.quantity}</td>
+                                    <td>
+                                        <Link to={`/stocks/${stock.symbol}`} className="view-button">
+                                            Ver detalles
+                                        </Link>
+                                    </td>
                                 </tr>
-                            ))
-                            ) : (
-                            <tr>
-                                <td colSpan="5">No se encontraron stocks</td>
-                            </tr>
-                            )}
+                            ))}
                         </tbody>
-                        </table>
+                    </table>
+                    
+                    <div className="pagination">
+                        <button onClick={handlePrevPage} disabled={page === 1 || loading}>
+                            Anterior
+                        </button>
+                        <span>Página {page}</span>
+                        <button onClick={handleNextPage} disabled={stocks.length < count || loading}>
+                            Siguiente
+                        </button>
+                    </div>
                 </div>
             )}
+            
+            <button onClick={fetchStocks} disabled={loading} className="refresh-button">
+                Actualizar
+            </button>
         </div>
     );
 }

@@ -1,117 +1,86 @@
-// src/pages/Wallet.jsx
 import { useState, useEffect } from 'react';
-import { getWalletBalance, depositToWallet } from '../api/wallet';
-import { useAuth0 } from '@auth0/auth0-react';
+import { getWalletBalance, depositToWallet } from '../api/apiService';
 
 const Wallet = () => {
-  const { isAuthenticated, loginWithRedirect } = useAuth0();
   const [balance, setBalance] = useState(0);
-  const [depositAmount, setDepositAmount] = useState(100);
   const [loading, setLoading] = useState(true);
-  const [depositing, setDepositing] = useState(false);
-  const [error, setError] = useState(null);
+  const [depositAmount, setDepositAmount] = useState('');
+  const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
   useEffect(() => {
-    if (isAuthenticated) {
-      fetchBalance();
-    } else {
-      setLoading(false);
-    }
-  }, [isAuthenticated]);
+    fetchBalance();
+  }, []);
 
   const fetchBalance = async () => {
     try {
       setLoading(true);
       const data = await getWalletBalance();
-      setBalance(data.balance || 0);
-    } catch (error) {
-      console.error("Error fetching balance:", error);
-      setError("Failed to load wallet balance");
+      setBalance(data.balance);
+      setError('');
+    } catch (err) {
+      setError('No se pudo cargar el saldo. Por favor, intenta de nuevo.');
+      console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDeposit = async () => {
-    if (!isAuthenticated) {
-      loginWithRedirect();
+  const handleDeposit = async (e) => {
+    e.preventDefault();
+    if (!depositAmount || isNaN(parseFloat(depositAmount)) || parseFloat(depositAmount) <= 0) {
+      setError('Por favor, ingresa un monto válido mayor a cero.');
       return;
     }
-  
-    if (depositAmount <= 0) {
-      setError("Por favor ingresa una cantidad válida");
-      return;
-    }
-  
+
     try {
-      setDepositing(true);
-      setError(null);
+      setLoading(true);
+      const data = await depositToWallet(parseFloat(depositAmount));
+      setBalance(data.balance);
+      setDepositAmount('');
+      setSuccessMessage('¡Depósito realizado con éxito!');
+      setError('');
       
-      // Primero registrar al usuario si no existe
-      const registered = await registerUserIfNeeded();
-      
-      if (!registered) {
-        setError("No se pudo registrar tu cuenta. Por favor intenta de nuevo.");
-        setDepositing(false);
-        return;
-      }
-      
-      const result = await depositToWallet(depositAmount);
-      
-      setBalance(result.balance);
-      alert(`Depósito exitoso de $${depositAmount}`);
-      setDepositAmount(100); // Resetear al valor por defecto
-    } catch (error) {
-      console.error("Error en el depósito:", error);
-      setError("No se pudo procesar el depósito. " + 
-               (error.response?.data?.error || "Intenta de nuevo más tarde."));
+      // Limpiar mensaje de éxito después de 3 segundos
+      setTimeout(() => setSuccessMessage(''), 3000);
+    } catch (err) {
+      setError('Error al realizar el depósito. Por favor, intenta de nuevo.');
+      console.error(err);
     } finally {
-      setDepositing(false);
+      setLoading(false);
     }
   };
 
-  if (loading) return <div>Loading wallet...</div>;
-
-  if (!isAuthenticated) {
-    return (
-      <div className="wallet-container">
-        <h2>My Wallet</h2>
-        <p>Please log in to access your wallet</p>
-        <button onClick={() => loginWithRedirect()}>Login</button>
-      </div>
-    );
-  }
-
   return (
     <div className="wallet-container">
-      <h2>My Wallet</h2>
+      <h2>Mi Billetera</h2>
       
-      <div className="wallet-balance">
-        <h3>Current Balance: ${balance.toFixed(2)}</h3>
-      </div>
+      {loading && <p>Cargando...</p>}
       
-      <div className="deposit-form">
-        <h3>Add Funds</h3>
+      {error && <div className="error-message">{error}</div>}
+      {successMessage && <div className="success-message">{successMessage}</div>}
+      
+      <div className="wallet-info">
+        <h3>Saldo disponible: ${balance}</h3>
         
-        <div className="form-group">
-          <label htmlFor="amount">Amount ($):</label>
-          <input
-            type="number"
-            id="amount"
-            min="10"
-            value={depositAmount}
-            onChange={(e) => setDepositAmount(parseFloat(e.target.value))}
-          />
-        </div>
-        
-        {error && <p className="error">{error}</p>}
-        
-        <button 
-          onClick={handleDeposit} 
-          disabled={depositing || depositAmount <= 0}
-        >
-          {depositing ? "Processing..." : "Deposit"}
-        </button>
+        <form onSubmit={handleDeposit}>
+          <div className="form-group">
+            <label htmlFor="deposit-amount">Monto a depositar:</label>
+            <input
+              id="deposit-amount"
+              type="number"
+              min="1"
+              step="0.01"
+              value={depositAmount}
+              onChange={(e) => setDepositAmount(e.target.value)}
+              placeholder="Ingresa el monto"
+              disabled={loading}
+            />
+          </div>
+          <button type="submit" disabled={loading}>
+            Recargar saldo
+          </button>
+        </form>
       </div>
     </div>
   );

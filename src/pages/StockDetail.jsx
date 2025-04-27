@@ -1,161 +1,181 @@
-// src/pages/StockDetail.jsx
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getStocksbySymbol } from '../api/stocks';
-import { purchaseStock } from '../api/purchases';
-import { getWalletBalance } from '../api/wallet';
-import { useAuth0 } from '@auth0/auth0-react';
+import { getStockBySymbol, buyStock, getWalletBalance } from '../api/apiService';
 
 const StockDetail = () => {
   const { symbol } = useParams();
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth0();
   const [stock, setStock] = useState(null);
-  const [priceHistory, setPriceHistory] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [quantity, setQuantity] = useState(1);
-  const [walletBalance, setWalletBalance] = useState(0);
-  const [purchasing, setPurchasing] = useState(false);
-  const [error, setError] = useState(null);
+  const [wallet, setWallet] = useState({ balance: 0 });
+  const [buyingStatus, setBuyingStatus] = useState({ loading: false, error: '', success: '' });
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const stockData = await getStocksbySymbol(symbol);
+        setLoading(true);
+        const [stockData, walletData] = await Promise.all([
+          getStockBySymbol(symbol),
+          getWalletBalance()
+        ]);
         
-        // The first entry is the most recent
-        if (stockData.data && stockData.data.length > 0) {
-          setStock(stockData.data[0]);
-          
-          // Set price history from all entries
-          const history = stockData.data.map(entry => ({
-            price: entry.price,
-            timestamp: entry.timestamp,
-            kind: entry.kind || 'REGULAR'
-          }));
-          
-          setPriceHistory(history);
-        }
-        
-        if (isAuthenticated) {
-          const walletData = await getWalletBalance();
-          setWalletBalance(walletData.balance || 0);
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        setError("Failed to load stock data");
+        setStock(stockData.data);
+        setWallet(walletData);
+        setError('');
+      } catch (err) {
+        setError('Error al cargar los datos. Por favor, intenta de nuevo.');
+        console.error(err);
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, [symbol, isAuthenticated]);
+  }, [symbol]);
 
-  const handlePurchase = async () => {
-    if (!isAuthenticated) {
-      setError("Please login to purchase stocks");
+  const handleBuy = async () => {
+    if (!stock || stock.length === 0) return;
+    
+    const stockItem = stock[0];
+    const totalCost = stockItem.price * quantity;
+    
+    if (totalCost > wallet.balance) {
+      setBuyingStatus({
+        loading: false,
+        error: 'Saldo insuficiente en tu billetera',
+        success: ''
+      });
       return;
     }
-
-    if (quantity <= 0) {
-      setError("Quantity must be greater than 0");
+    
+    if (quantity <= 0 || quantity > stockItem.quantity) {
+      setBuyingStatus({
+        loading: false,
+        error: 'Cantidad inválida',
+        success: ''
+      });
       return;
     }
-
-    const totalCost = stock.price * quantity;
-    if (totalCost > walletBalance) {
-      setError("Insufficient funds in wallet");
-      return;
-    }
-
+    
     try {
-      setPurchasing(true);
-      setError(null);
+      setBuyingStatus({ loading: true, error: '', success: '' });
       
-      await purchaseStock(symbol, quantity);
+      const result = await buyStock(symbol, quantity);
       
-      alert("Purchase request sent! Check your purchases page for updates.");
-      navigate('/my-purchases');
-    } catch (error) {
-      console.error("Purchase error:", error);
-      setError(error.response?.data?.error || "Failed to purchase stock");
-    } finally {
-      setPurchasing(false);
+      setBuyingStatus({
+        loading: false,
+        error: '',
+        success: `¡Compra exitosa! ID de solicitud: ${result.request_id}`
+      });
+      
+      // Actualizar wallet y stock después de la compra
+      const [newStockData, newWalletData] = await Promise.all([
+        getStockBySymbol(symbol),
+        getWalletBalance()
+      ]);
+      
+      setStock(newStockData.data);
+      setWallet(newWalletData);
+      
+      // Opcionalmente redirigir a compras después de un tiempo
+      setTimeout(() => {
+        navigate('/my-purchases');
+      }, 3000);
+      
+    } catch (err) {
+      setBuyingStatus({
+        loading: false,
+        error: err.response?.data?.error || 'Error al procesar la compra',
+        success: ''
+      });
     }
   };
 
-  if (loading) return <div>Loading details...</div>;
+  if (loading) return <div>Cargando detalles...</div>;
   
-  if (!stock) return <div>No data found for {symbol}</div>;
+  if (!stock || stock.length === 0) {
+    return (
+      <div className="error-container">
+        <h2>No se encontraron datos para {symbol}</h2>
+        <button onClick={() => navigate('/stocks')}>Volver a Stocks</button>
+      </div>
+    );
+  }
+
+  const stockItem = stock[0];
+  const totalCost = stockItem.price * quantity;
+  const maxQuantity = stockItem.quantity;
 
   return (
     <div className="stock-detail-container">
-      <h2>Details for {symbol}</h2>
+      <button onClick={() => navigate('/stocks')} className="back-button">
+        ← Volver a la lista
+      </button>
       
-      <div className="stock-info">
-        <h3>{stock.long_name}</h3>
-        <p>Current price: ${stock.price.toFixed(2)}</p>
-        <p>Available: {stock.quantity} shares</p>
-        <p>Last updated: {new Date(stock.timestamp).toLocaleString()}</p>
-        {stock.kind && (
-          <p>Origin: <span className={`tag tag-${stock.kind.toLowerCase()}`}>{stock.kind}</span></p>
-        )}
-      </div>
+      <h2>Detalles de {symbol}</h2>
       
-      {priceHistory.length > 1 && (
-        <div className="price-history">
-          <h3>Price History</h3>
-          <table>
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Price</th>
-              </tr>
-            </thead>
-            <tbody>
-              {priceHistory.map((entry, index) => (
-                <tr key={index}>
-                  <td>{new Date(entry.timestamp).toLocaleString()}</td>
-                  <td>${entry.price.toFixed(2)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {error && <div className="error-message">{error}</div>}
+      
+      <div className="stock-details">
+        <h3>{stockItem.long_name}</h3>
+        <div className="info-grid">
+          <div className="info-item">
+            <span>Precio actual:</span>
+            <span className="value">${stockItem.price}</span>
+          </div>
+          <div className="info-item">
+            <span>Cantidad disponible:</span>
+            <span className="value">{stockItem.quantity}</span>
+          </div>
+          <div className="info-item">
+            <span>Última actualización:</span>
+            <span className="value">{new Date(stockItem.timestamp).toLocaleString()}</span>
+          </div>
         </div>
-      )}
-      
-      {isAuthenticated && (
-        <div className="purchase-form">
-          <h3>Buy Shares</h3>
-          <p>Your wallet balance: ${walletBalance.toFixed(2)}</p>
+
+        <div className="buy-section">
+          <h3>Comprar acciones</h3>
+          <p>Tu saldo disponible: ${wallet.balance}</p>
           
-          <div className="form-group">
-            <label htmlFor="quantity">Quantity:</label>
+          <div className="quantity-selector">
+            <label htmlFor="quantity">Cantidad:</label>
             <input
-              type="number"
               id="quantity"
+              type="number"
               min="1"
-              max={stock.quantity}
+              max={maxQuantity}
               value={quantity}
-              onChange={(e) => setQuantity(parseInt(e.target.value))}
+              onChange={(e) => setQuantity(Math.min(maxQuantity, Math.max(1, parseInt(e.target.value) || 1)))}
+              disabled={buyingStatus.loading}
             />
           </div>
           
-          <div className="price-calculation">
-            <p>Total cost: ${(stock.price * quantity).toFixed(2)}</p>
+          <div className="total-cost">
+            <p>Costo total: ${totalCost.toFixed(2)}</p>
+            <p className={wallet.balance < totalCost ? 'error' : ''}>
+              {wallet.balance < totalCost ? 'Saldo insuficiente' : 'Saldo suficiente'}
+            </p>
           </div>
           
-          {error && <p className="error">{error}</p>}
+          {buyingStatus.error && (
+            <div className="error-message">{buyingStatus.error}</div>
+          )}
           
-          <button 
-            onClick={handlePurchase} 
-            disabled={purchasing || quantity <= 0 || quantity > stock.quantity}
+          {buyingStatus.success && (
+            <div className="success-message">{buyingStatus.success}</div>
+          )}
+          
+          <button
+            onClick={handleBuy}
+            disabled={buyingStatus.loading || wallet.balance < totalCost || quantity > maxQuantity}
+            className="buy-button"
           >
-            {purchasing ? "Processing..." : "Buy Now"}
+            {buyingStatus.loading ? 'Procesando...' : 'Comprar'}
           </button>
         </div>
-      )}
+      </div>
     </div>
   );
 };

@@ -18,13 +18,22 @@ function App() {
   return (
     <Router>
       <div className="app-container">
-        {isAuthenticated ? (
-          <>
-            <header>
-              <Profile />
-              <LogoutButton />
-            </header>
-            <Navigation />
+      {isAuthenticated ? (
+      <>
+        <header className="app-header">
+          <div className="user-profile">
+            <Profile />
+          </div>
+          <nav className="main-nav">
+            <Link to="/stocks">Stocks</Link>
+            <Link to="/my-purchases">Mis Compras</Link>
+            <Link to="/wallet">Billetera</Link>
+            <Link to="/event-log">Registro de Eventos</Link>
+          </nav>
+          <div className="logout-button">
+            <LogoutButton />
+          </div>
+        </header>
             <main>
               <Routes>
                 <Route path="/" element={<Navigate to="/stocks" />} />

@@ -1,192 +1,88 @@
-// src/pages/EventLog.jsx
 import { useState, useEffect } from 'react';
-import axios from 'axios';
-import { getAuth0Client } from '../auth0-config';
-import { useAuth0 } from '@auth0/auth0-react';
-
-const API_URL = import.meta.env.VITE_API_URL;
+import { getEvents } from '../api/apiService';
 
 const EventLog = () => {
-  const { isAuthenticated, loginWithRedirect } = useAuth0();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState('');
   const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const [filter, setFilter] = useState('ALL');
+  const [eventType, setEventType] = useState('ALL');
 
   useEffect(() => {
-    if (isAuthenticated) {
-      fetchEvents();
-    } else {
-      setLoading(false);
-    }
-  }, [isAuthenticated, page, filter]);
+    fetchEvents();
+  }, [page, eventType]);
 
   const fetchEvents = async () => {
     try {
       setLoading(true);
-      
-      const token = await getToken();
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      
-      const filterParam = filter !== 'ALL' ? `&type=${filter}` : '';
-      const response = await axios.get(
-        `${API_URL}/events?page=${page}&count=25${filterParam}`,
-        { headers }
-      );
-      
-      const newEvents = response.data.data || [];
-      
-      if (newEvents.length < 25) {
-        setHasMore(false);
-      }
-      
-      if (page === 1) {
-        setEvents(newEvents);
-      } else {
-        setEvents(prev => [...prev, ...newEvents]);
-      }
-    } catch (error) {
-      console.error("Error fetching events:", error);
-      setError("Failed to load event log");
+      const data = await getEvents(page, 25, eventType);
+      setEvents(data.data || []);
+      setError('');
+    } catch (err) {
+      setError('Error al cargar los eventos. Por favor, intenta de nuevo.');
+      console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
-  const getToken = async () => {
-    try {
-      const auth0 = await getAuth0Client();
-      return await auth0.getTokenSilently();
-    } catch (error) {
-      console.error("Error obtaining token:", error);
-      return null;
-    }
+  const handlePrevPage = () => {
+    if (page > 1) setPage(page - 1);
   };
 
-  const getEventIcon = (type) => {
-    switch (type) {
-      case 'UPDATE': return '📊';
-      case 'IPO': return '🚀';
-      case 'EMIT': return '🔄';
-      case 'PURCHASE_REQUEST': return '🛒';
-      case 'ACCEPTED': return '✅';
-      case 'REJECTED': return '❌';
-      default: return '📝';
-    }
+  const handleNextPage = () => {
+    setPage(page + 1);
   };
-
-  const formatEventDetails = (event) => {
-    const { type, details } = event;
-    
-    switch (type) {
-      case 'IPO':
-        return (
-          <div>
-            <p><strong>Symbol:</strong> {details.symbol}</p>
-            <p><strong>Name:</strong> {details.shortName}</p>
-            <p><strong>Price:</strong> ${details.price?.toFixed(2)}</p>
-            <p><strong>Quantity:</strong> {details.quantity}</p>
-          </div>
-        );
-      case 'EMIT':
-        return (
-          <div>
-            <p><strong>Symbol:</strong> {details.symbol}</p>
-            <p><strong>New Price:</strong> ${details.price?.toFixed(2)}</p>
-            <p><strong>Added Quantity:</strong> {details.quantity}</p>
-          </div>
-        );
-      case 'UPDATE':
-        return (
-          <div>
-            <p><strong>Symbol:</strong> {details.symbol}</p>
-            <p><strong>New Price:</strong> ${details.price?.toFixed(2)}</p>
-          </div>
-        );
-      case 'PURCHASE_REQUEST':
-        return (
-          <div>
-            <p><strong>Request ID:</strong> {details.request_id}</p>
-            <p><strong>Symbol:</strong> {details.symbol}</p>
-            <p><strong>Quantity:</strong> {details.quantity}</p>
-            <p><strong>Status:</strong> {details.status || 'PENDING'}</p>
-          </div>
-        );
-      default:
-        return (
-          <pre className="event-details">
-            {JSON.stringify(details, null, 2)}
-          </pre>
-        );
-    }
-  };
-
-  if (loading && page === 1) return <div>Loading event log...</div>;
-
-  if (!isAuthenticated) {
-    return (
-      <div className="event-log-container">
-        <h2>Event Log</h2>
-        <p>Please log in to view the event log</p>
-        <button onClick={() => loginWithRedirect()}>Login</button>
-      </div>
-    );
-  }
 
   return (
-    <div className="event-log-container">
-      <h2>Event Log</h2>
+    <div className="events-container">
+      <h2>Registro de Eventos</h2>
       
-      <div className="event-filters">
-        <select 
-          value={filter} 
-          onChange={(e) => {
-            setFilter(e.target.value);
-            setPage(1);
-            setHasMore(true);
-          }}
-        >
-          <option value="ALL">All Events</option>
-          <option value="IPO">IPO Events</option>
-          <option value="EMIT">EMIT Events</option>
-          <option value="UPDATE">Price Updates</option>
-          <option value="PURCHASE_REQUEST">Purchase Requests</option>
-        </select>
+      <div className="filters">
+        <label>
+          Tipo de evento:
+          <select 
+            value={eventType} 
+            onChange={(e) => setEventType(e.target.value)}
+            disabled={loading}
+          >
+            <option value="ALL">Todos</option>
+            <option value="WALLET_DEPOSIT">Depósitos en billetera</option>
+            <option value="PURCHASE_REQUEST">Solicitudes de compra</option>
+            <option value="PURCHASE_VALIDATION">Validaciones de compra</option>
+            <option value="EXTERNAL_PURCHASE">Compras externas</option>
+          </select>
+        </label>
       </div>
       
-      {error && <p className="error">{error}</p>}
+      {loading && <p>Cargando eventos...</p>}
       
-      {events.length > 0 ? (
-        <>
-          <ul className="event-list">
-            {events.map((event, index) => (
-              <li key={index} className={`event-item event-${event.type.toLowerCase()}`}>
-                <div className="event-icon">{getEventIcon(event.type)}</div>
-                <div className="event-content">
-                  <h4>{event.type}</h4>
-                  <p className="event-time">
-                    {new Date(event.created_at).toLocaleString()}
-                  </p>
-                  {formatEventDetails(event)}
-                </div>
-              </li>
-            ))}
-          </ul>
+      {error && <div className="error-message">{error}</div>}
+      
+      {!loading && events.length === 0 && !error && (
+        <p>No hay eventos registrados</p>
+      )}
+      
+      {events.length > 0 && (
+        <div className="events-list">
+          {events.map((event) => (
+            <div key={event.id} className="event-card">
+              <h3>{event.type}</h3>
+              <p>Fecha: {new Date(event.created_at).toLocaleString()}</p>
+              <pre>{JSON.stringify(event.details, null, 2)}</pre>
+            </div>
+          ))}
           
-          {hasMore && (
-            <button 
-              className="load-more" 
-              onClick={() => setPage(prev => prev + 1)}
-              disabled={loading}
-            >
-              {loading ? "Loading..." : "Load More"}
+          <div className="pagination">
+            <button onClick={handlePrevPage} disabled={page === 1 || loading}>
+              Anterior
             </button>
-          )}
-        </>
-      ) : (
-        <p>No events recorded yet</p>
+            <span>Página {page}</span>
+            <button onClick={handleNextPage} disabled={events.length < 25 || loading}>
+              Siguiente
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );
