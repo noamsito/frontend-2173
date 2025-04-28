@@ -2,7 +2,7 @@
 
 ## Introducción
 
-Este documento detalla los pasos necesarios para instalar, configurar y seguir el flujo de monitoreo de nuestra aplicación de Stock Market. Hemos implementado múltiples capas de monitoreo para asegurar la robustez del sistema, la detección temprana de errores y la capacidad de recuperación ante fallos.
+Este documento detalla los pasos que seguimos para configurar y seguir el flujo de monitoreo de nuestra app. Implementamos múltiples capas de monitoreo para una detección temprana de errores y capacidad de recuperación ante fallos.
 
 ## Componentes de Monitoreo Implementados
 
@@ -175,25 +175,7 @@ Para monitorear este comportamiento:
 docker-compose logs -f mqtt-client | grep "Reintentando"
 ```
 
-## 3. Dashboard de New Relic
-
-Una vez configurado New Relic, puede acceder al dashboard para visualizar métricas de rendimiento:
-
-1. Iniciar sesión en [New Relic](https://one.newrelic.com)
-2. Navegar a "APM & Services" para ver el rendimiento de la aplicación
-3. Explorar métricas como:
-   - Tiempo de respuesta promedio
-   - Throughput (solicitudes por minuto)
-   - Error rate (tasa de errores)
-   - Consumo de CPU y memoria
-   - Tiempo de respuesta de bases de datos
-
-4. Configurar alertas para recibir notificaciones cuando:
-   - El tiempo de respuesta supere un umbral definido
-   - La tasa de errores aumente significativamente
-   - El consumo de recursos sea excesivo
-
-## 4. Depuración y Resolución de Problemas
+## 3. Depuración y Resolución de Problemas
 
 Los logs detallados han sido fundamentales para probar y depurar la aplicación. Para resolver problemas comunes:
 
@@ -226,12 +208,14 @@ Utilizar el endpoint de debug para verificar duplicados:
 GET /debug/check-duplicates
 ```
 
+## General
+
+Como metodo general se utilizó la misma app mediante prueba y error, en conjunto con todas las herramientas mencionadas, para ir viendo la correctitud de esta.
+
 ## Resumen
 
 Nuestro sistema de monitoreo multicapa nos permite:
 1. Detectar problemas en tiempo real a través de logs detallados
 2. Seguir eventos importantes a través del sistema de registro en base de datos
 3. Asegurar la resiliencia mediante reconexiones y reintentos automáticos
-4. Visualizar métricas de rendimiento en el dashboard de New Relic
-
-La combinación de estos componentes ha sido esencial para garantizar la estabilidad y fiabilidad de nuestra plataforma de trading de acciones, permitiendo una rápida identificación y resolución de problemas durante el desarrollo y en producción.
+4. New Relic
