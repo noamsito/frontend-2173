@@ -1,121 +1,73 @@
-# Documentación del Flujo de Monitoreo
+# Monitoreo New Relic (dashboard)
 
-## Monitoreo con New Relic para **backend-2173**
+A continuacion se muestra varias tablas donde se explican puntualmente las condiciones necesarias para poder realizar le monitoreo con New Relic. Junto con las explicaciones de que indican cada parte del dashboard que se presenta en la aplicacion.
 
-Este documento explica **paso a paso** cómo instrumentar el servicio `api` de nuestro proyecto `backend-2173` (Node 18 + Docker Compose) con New Relic APM y cómo validar que los datos lleguen correctamente.
+## 1. Prerequisitos 
+Componente | Versión mínima | Notas
+| Componente                     | Versión mínima | Notas                                      |
+|--------------------------------|----------------|--------------------------------------------|
+| Node.js                        | 18 LTS         | Igual para entorno local y contenedor      |
+| npm / pnpm / yarn              | cualquiera     | Usamos npm en los ejemplos                 |
+| Cuenta New Relic               | Free Tier      | Necesarios el User key y License key            |
+| Docker / Docker Compose        | 24.x           | El backend corre en un contenedor          |
 
-
----
-
-## 1  Prerequisitos
-
-| Requisito        | Descripción                                                                                 |
-|------------------|---------------------------------------------------------------------------------------------|
-| License Key      | Solicitar la key al grupo                     |
-| Repo local       | Código del backend clonado                                             |
-| Docker + Compose | Versión compatible con `compose` v3.8                                                       |
-
----
-
-## 2  Instalación del agente
-
+## 2. Instalacion del APM en el backend
+#### 1 – Añade la dependencia
 ```bash
-cd backend-2173/api
-npm install newrelic --save       # ➊ Añade la dependencia
+npm install newrelic --save
 ```
 
----
-
-## 3  Configuración
-
-### 3.1  Archivo `newrelic.cjs`
-> Colocar en `backend-2173/api/`
-
-```js
-'use strict';
-exports.config = {
-  app_name: [process.env.NEW_RELIC_APP_NAME || 'backend-2173'],
-  license_key: process.env.NEW_RELIC_LICENSE_KEY,
-  distributed_tracing: { enabled: true },
-  logging: { level: 'info' },
-  allow_all_headers: true,
-  attributes: { enabled: true }
-};
-```
-
-**¡No** hardcodear la key! Se pasa por variable de entorno.
-
----
-
-## 4  Actualizar la imagen Docker
-
-Editar `backend-2173/api/Dockerfile`:
-
-```dockerfile
-FROM node:18
-WORKDIR /app
-
-COPY package*.json ./
-RUN npm install
-
-COPY newrelic.cjs ./newrelic.cjs     # ➌ Copia la config
-COPY . .
-
-EXPOSE 3000
-CMD ["node", "server.js"]
-```
-
----
-
-## 5  Variables de entorno
-
-En `docker-compose.yml` añadir bajo `api.environment`:
-
-```yaml
-- NEW_RELIC_LICENSE_KEY=${NEW_RELIC_LICENSE_KEY}
-- NEW_RELIC_APP_NAME=backend-2173
-# (opcional) - NEW_RELIC_LOG=stdout   # Manda los logs a docker logs
-```
-
-Editar el archivo `.env` en la raíz:
-
-```env
-NEW_RELIC_LICENSE_KEY=****lakey****
-NEW_RELIC_APP_NAME=backend-2173
-```
-
----
-
-## 6  Levantar el docker
-
+#### 2 – Copia el archivo de configuración base
 ```bash
-docker-compose down && docker-compose build --no-cache && docker-compose up
+cp node_modules/newrelic/newrelic.js ./newrelic.js
 ```
 
----
+#### 3 - Creacion de archivo auxiliar para utilizacion de libreria
+```bash
+touch newrelic-init.cjs
+```
+Contenido de este ultimo archivo:
+```cjs
+require('newrelic')
+```
 
-## 7  Validación del flujo de monitoreo
+## 2.1 Requisitos extras (Dockerfile, docker-compose)
 
-1. **Logs de arranque**  
+| **Variable**                          | **Valor**   | **Descripción**                                                              |
+|---------------------------------------|--------------------|------------------------------------------------------------------------------|
+| NEW_RELIC_LICENSE_KEY                 |     2a9b48ca67bc5211688f3a68d3e25d09FFFFNRAL        | Clave de licencia                                                            |
+| NEW_RELIC_APP_NAME                    | new_relic_back     | Nombre lógico mostrado en la UI                                              |
+| NEW_RELIC_LOG                         | stdout    | Sirve para ver los logs asociados a new relic en la consola |
+| NEW_RELIC_DISTRIBUTED_TRACING_ENABLED | true               | Activa trazabilidad de extremo a extremo                                     |
 
-   ```bash
-   docker compose logs -f api | grep -i newrelic
-   ```
-   Debería verse `Agent connected to <collector-...>`.
+Concretamente el docker-compose se tiene que ver algo por el estilo:
+```yml
+services:
+  api:
+    build: ./api
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+    environment:
+      - DB_HOST=db
+      - DB_USER=postgres
+      - DB_PASSWORD=admin123
+      - DB_NAME=stock_data
+      - DB_PORT=5432
+      - GROUP_ID=1
+      - NEW_RELIC_LICENSE_KEY=2a9b48ca67bc5211688f3a68d3e25d09FFFFNRAL
+      - NEW_RELIC_APP_NAME=new_relic_back
+      - NEW_RELIC_LOG=stdout
+```
 
-2. **UI de New Relic**  
 
-   * Navegar a **APM & Services → backend-2173**  
-   * Esperar ~2 min; refrescar el panel.  
-   * Realizar peticiones a `http://localhost:3000/...` y comprobar que el gráfico de _Throughput_ y la lista de _Transactions_ se actualizan.
-
-3. **Vista de transacciones**  
-
-   * Seleccionar una transacción específica  
-   * Ver tiempos de respuesta, SQL (PostgreSQL) y trazas.
-
-   *(Incluye aquí capturas de pantalla si las tienes, por ejemplo `docs/images/apm-overview.png` y `docs/images/apm-transaction.png`).*
-
-*(Si no aparecen, revisar variables de entorno y conexión a Internet).*
-
----
+## 3. Explicaciones del flujo de monitoreo
+| Área UI                        | Métrica / Insight                              | Cómo interpretarlo                          |
+|----------------------------------|-----------------------------------------------|-----------------------------------------------------------------------------------|
+| Web transactions time (gráfico de barras apiladas) | Latency por capa (Node.js, Postgres, Response time) | El ancho de banda azul indica tiempo de CPU/loop en Node.js; la franja amarilla simboliza tiempo en queries a tu base de datos |
+| Apdex score                      | Satisfacción de usuarios (0 – 1)              | Valores ≥ 0.85 → buen UX; < 0.70 → alerta                                         |
+| Transactions (menú lateral)      | Lista de endpoints con mayor duración/promedio | Optimiza los que tengan p95 alto                                                 |
+| Databases                        | Consultas más lentas                          | Agrega índices o usa lazy loading                                                |
+| Errors inbox / Logs              | Trazas de stack y excepciones                | Relaciónalo con tu Sentry u otro tracker                                         |
+| Related entities → Infrastructure| Conexión al agente de infraestructura        | Si hay “2 hosts” ya se está obteniendo métricas de CPU, RAM y disco                |
