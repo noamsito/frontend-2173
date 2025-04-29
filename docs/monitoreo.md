@@ -35,7 +35,7 @@ require('newrelic')
 
 | **Variable**                          | **Valor**   | **Descripción**                                                              |
 |---------------------------------------|--------------------|------------------------------------------------------------------------------|
-| NEW_RELIC_LICENSE_KEY                 |     2a9b48ca67bc5211688f3a68d3e25d09FFFFNRAL        | Clave de licencia                                                            |
+| NEW_RELIC_LICENSE_KEY                 |     pedir la key al grupo        | Clave de licencia                                                            |
 | NEW_RELIC_APP_NAME                    | new_relic_back     | Nombre lógico mostrado en la UI                                              |
 | NEW_RELIC_LOG                         | stdout    | Sirve para ver los logs asociados a new relic en la consola |
 | NEW_RELIC_DISTRIBUTED_TRACING_ENABLED | true               | Activa trazabilidad de extremo a extremo                                     |
