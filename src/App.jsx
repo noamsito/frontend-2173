@@ -4,11 +4,13 @@ import { LoginButton, LogoutButton, Profile } from './components/AuthComponents'
 import Navigation from './components/Navigation';
 import TestStocks from './testStocks';
 import MyPurchases from './pages/MyPurchases';
+import PurchaseDetail from './pages/PurchaseDetail'; // Nueva importación
 import Wallet from './pages/Wallet';
 import StockDetail from './pages/StockDetail';
 import EventLog from './pages/EventLog';
 
 import './App.css';
+import './styles/purchases.css'; // Nueva importación
 
 function App() {
   const { isAuthenticated, isLoading } = useAuth0();
@@ -40,6 +42,7 @@ function App() {
                 <Route path="/stocks" element={<TestStocks />} />
                 <Route path="/stocks/:symbol" element={<StockDetail />} />
                 <Route path="/my-purchases" element={<MyPurchases />} />
+                <Route path="/purchases/:id" element={<PurchaseDetail />} /> {/* Nueva ruta */}
                 <Route path="/wallet" element={<Wallet />} />
                 <Route path="/event-log" element={<EventLog />} />
               </Routes>

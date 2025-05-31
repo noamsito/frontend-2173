@@ -1,25 +1,22 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './index.css'
-import './styles.css'  // Importamos los nuevos estilos
-import App from './App.jsx'
-import { Auth0Provider } from '@auth0/auth0-react'
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { Auth0Provider } from '@auth0/auth0-react';
+import App from './App.jsx';
+import './index.css';
 
-const domain = import.meta.env.VITE_AUTH0_DOMAIN || "dev-ouxdigl1l6bn6n3r.us.auth0.com";
-const clientId = import.meta.env.VITE_AUTH0_CLIENT_ID || "ioEcob7KVSQ883eYRrY0gnyknMFJDRCt";
-
-createRoot(document.getElementById('root')).render(
-  <StrictMode>
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
     <Auth0Provider
-      domain={domain}
-      clientId={clientId}
+      domain={import.meta.env.VITE_AUTH0_DOMAIN}
+      clientId={import.meta.env.VITE_AUTH0_CLIENT_ID}
       authorizationParams={{
         redirect_uri: window.location.origin,
-        audience: "https://stockmarket-api/",
-        scope: "openid profile email",
+        audience: "https://stockmarket-api/"
       }}
+      useRefreshTokens={true}
+      cacheLocation="localstorage"
     >
       <App />
     </Auth0Provider>
-  </StrictMode>,
-)
+  </React.StrictMode>,
+);

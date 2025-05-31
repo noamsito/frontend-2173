@@ -1,49 +1,76 @@
 // Create file: src/api/purchases.js
 import axios from "axios";
-import { getAuth0Client } from "../auth0-config";
 
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
-// For obtaining the Auth0 token
-const getToken = async () => {
-  try {
-    const auth0 = await getAuth0Client();
-    return await auth0.getTokenSilently();
-  } catch (error) {
-    console.error("Error obtaining token:", error);
-    return null;
-  }
+console.log("🔧 API_URL configurada:", API_URL); // DEBUG
+
+// Función de ayuda para crear headers sin autenticación (temporal)
+const getAuthHeaders = async () => {
+  return {}; // Sin headers por ahora
 };
 
-export const purchaseStock = async (symbol, quantity) => {
+// Obtener compras de un usuario - usar userId hardcodeado para testing
+export const getUserPurchases = async (userId = 1) => {
   try {
-    const token = await getToken();
-    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    console.log("📡 Llamando a getUserPurchases para userId:", userId); // DEBUG
+    console.log("📡 URL completa:", `${API_URL}/api/purchases/user/${userId}`); // DEBUG
     
-    const response = await axios.post(
-      `${API_URL}/stocks/buy`,
-      { symbol, quantity },
+    const headers = await getAuthHeaders();
+    const response = await axios.get(
+      `${API_URL}/api/purchases/user/${userId}`,
       { headers }
     );
+    
+    console.log("✅ Respuesta exitosa:", response.data); // DEBUG
     return response.data;
   } catch (err) {
-    console.error("Error purchasing stock:", err);
+    console.error("❌ Error detallado:", err); // DEBUG
+    console.error("❌ Response:", err.response?.data); // DEBUG
+    console.error("❌ Status:", err.response?.status); // DEBUG
     throw err;
   }
 };
 
-export const getUserPurchases = async () => {
+// Crear nueva compra
+export const createPurchase = async (purchaseData) => {
   try {
-    const token = await getToken();
-    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    console.log("📡 Creando compra:", purchaseData); // DEBUG
     
-    const response = await axios.get(
-      `${API_URL}/purchases`,
+    const headers = await getAuthHeaders();
+    const dataWithUserId = { ...purchaseData, userId: 1 };
+    
+    console.log("📡 Data final:", dataWithUserId); // DEBUG
+    
+    const response = await axios.post(
+      `${API_URL}/api/purchases`,
+      dataWithUserId,
       { headers }
     );
+    
+    console.log("✅ Compra creada:", response.data); // DEBUG
     return response.data;
   } catch (err) {
-    console.error("Error fetching user purchases:", err);
-    return { data: [] };
+    console.error("❌ Error al crear compra:", err);
+    throw err;
+  }
+};
+
+// Obtener estimación de una compra
+export const getPurchaseEstimation = async (purchaseId) => {
+  try {
+    console.log("📡 Obteniendo estimación para:", purchaseId);
+    
+    const headers = await getAuthHeaders();
+    const response = await axios.get(
+      `${API_URL}/api/purchases/${purchaseId}/estimate`,
+      { headers }
+    );
+    
+    console.log("✅ Estimación obtenida:", response.data);
+    return response.data;
+  } catch (err) {
+    console.error("❌ Error al obtener estimación:", err);
+    throw err;
   }
 };
