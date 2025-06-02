@@ -2,17 +2,18 @@ import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-ro
 import { useAuth0 } from '@auth0/auth0-react';
 import { LoginButton, LogoutButton, Profile } from './components/AuthComponents';
 import Navigation from './components/Navigation';
-import SystemStatus from './components/SystemStatus'; // ← AGREGAR ESTA LÍNEA
+import SystemStatus from './components/SystemStatus';
 import TestStocks from './testStocks';
 import MyPurchases from './pages/MyPurchases';
 import PurchaseDetail from './pages/PurchaseDetail';
 import Wallet from './pages/Wallet';
 import StockDetail from './pages/StockDetail';
 import EventLog from './pages/EventLog';
+import WebPayReturn from './pages/WebPayReturn';
 
 import './App.css';
 import './styles/purchases.css';
-import './components/SystemStatus.css'; // ← AGREGAR ESTA LÍNEA
+import './styles/SystemStatus.css';
 
 function App() {
   const { isLoading, error, isAuthenticated, user } = useAuth0();
@@ -50,6 +51,7 @@ function App() {
                 <Route path="/my-purchases" element={<MyPurchases />} />
                 <Route path="/purchases/:id" element={<PurchaseDetail />} />
                 <Route path="/wallet" element={<Wallet />} />
+                <Route path="/webpay/return" element={<WebPayReturn />} />
                 <Route path="/event-log" element={<EventLog />} />
               </Routes>
             </main>

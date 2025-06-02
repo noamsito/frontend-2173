@@ -63,36 +63,50 @@ const StockDetail = () => {
     try {
       setBuyingStatus({ loading: true, error: '', success: '' });
       
-      const result = await buyStock(symbol, quantity);
+      // Obtener token
+      const token = await getAccessTokenSilently();
       
-      setBuyingStatus({
-        loading: false,
-        error: '',
-        success: `¡Compra exitosa! ID de solicitud: ${result.request_id}`
+      // NUEVO: Iniciar flujo WebPay
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/stocks/buy/webpay/init`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ symbol, quantity })
       });
       
-      setRetryData(null); // Limpiar datos de reintento si fue exitoso
+      const data = await response.json();
       
-      // Actualizar wallet y stock después de la compra
-      const [newStockData, newWalletData] = await Promise.all([
-        getStockBySymbol(symbol),
-        getWalletBalance()
-      ]);
-      
-      setStock(newStockData.data);
-      setWallet(newWalletData);
-      
-      // Opcionalmente redirigir a compras después de un tiempo
-      setTimeout(() => {
-        navigate('/my-purchases');
-      }, 3000);
+      if (data.success) {
+        // Guardar datos para después de WebPay
+        localStorage.setItem('webpay_purchase', JSON.stringify({
+          request_id: data.request_id,
+          symbol,
+          quantity,
+          price: stockItem.price,
+          total: totalCost
+        }));
+        
+        setBuyingStatus({
+          loading: false,
+          error: '',
+          success: 'Redirigiendo a WebPay...'
+        });
+        
+        // Redirigir a WebPay
+        setTimeout(() => {
+          window.location.href = data.webpay_url;
+        }, 1500);
+        
+      } else {
+        throw new Error(data.error || 'Error iniciando pago');
+      }
       
     } catch (err) {
-      // Guardar datos para posible reintento
-      setRetryData({ symbol, quantity });
       setBuyingStatus({
         loading: false,
-        error: err.response?.data?.error || 'Error al procesar la compra. Puede intentar nuevamente.',
+        error: err.message || 'Error al procesar la compra',
         success: ''
       });
     }
