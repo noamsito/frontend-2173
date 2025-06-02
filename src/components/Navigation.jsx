@@ -20,9 +20,6 @@ const Navigation = () => {
         <Link to="/my-purchases" className={isActive('/my-purchases')}>
           Mis Compras
         </Link>
-        <Link to="/wallet" className={isActive('/wallet')}>
-          Billetera
-        </Link>
         <Link to="/event-log" className={isActive('/event-log')}>
           Registro de Eventos
         </Link>

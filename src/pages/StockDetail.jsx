@@ -19,7 +19,8 @@ const StockDetail = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-
+    
+        // ✅ NUEVO: Manejo mejorado del estado cancelado
         if (symbol === 'cancelado') {
           setStock(null);
           setLoading(false);
@@ -28,20 +29,22 @@ const StockDetail = () => {
           const status = searchParams.get('status');
           const message = searchParams.get('message');
         
-          if (status === 'cancelled') {
+          if (status === 'cancelled' || status === 'error') {
             setBuyingStatus({
               loading: false,
               error: message || 'Compra cancelada por el usuario',
               success: ''
             });
           
-            // Redirigir a la lista de stocks después de 3 segundos
+            // Redirigir a la lista de stocks después de 4 segundos
             setTimeout(() => {
               navigate('/stocks');
-            }, 3000);
+            }, 4000);
           }
-          return; // ← IMPORTANTE: salir aquí
+          return;
         }
+    
+        // ✅ OBTENER DATOS NORMALMENTE
         const [stockData, walletData] = await Promise.all([
           getStockBySymbol(symbol),
           getWalletBalance()
@@ -49,7 +52,8 @@ const StockDetail = () => {
         
         setStock(stockData.data);
         setWallet(walletData);
-
+    
+        // ✅ NUEVO: Manejo mejorado de parámetros de retorno WebPay
         const status = searchParams.get('status');
         const message = searchParams.get('message');
         const requestId = searchParams.get('request_id');
@@ -63,9 +67,10 @@ const StockDetail = () => {
           
           switch (status) {
             case 'cancelled':
+            case 'error':
               setBuyingStatus({
                 loading: false,
-                error: message || 'Compra cancelada por el usuario',
+                error: message || 'Error en el procesamiento del pago',
                 success: ''
               });
               break;
@@ -77,9 +82,9 @@ const StockDetail = () => {
                 success: message || '¡Compra realizada exitosamente!'
               });
               
-              // Si la compra fue exitosa, redirigir a "Mis Compras" después de un momento
+              // ✅ MEJORADO: Dar más tiempo para leer el mensaje de éxito
               setTimeout(() => {
-                navigate('/my-purchases');
+                navigate('/my-purchases?status=success&message=' + encodeURIComponent(message));
               }, 3000);
               break;
               
@@ -87,14 +92,6 @@ const StockDetail = () => {
               setBuyingStatus({
                 loading: false,
                 error: message || 'El pago fue rechazado por el banco',
-                success: ''
-              });
-              break;
-              
-            case 'error':
-              setBuyingStatus({
-                loading: false,
-                error: message || 'Error al procesar el pago',
                 success: ''
               });
               break;
@@ -142,15 +139,8 @@ const StockDetail = () => {
     const stockItem = stock[0];
     const totalCost = stockItem.price * quantity;
     
-    if (totalCost > wallet.balance) {
-      setBuyingStatus({
-        loading: false,
-        error: 'Saldo insuficiente en tu billetera',
-        success: ''
-      });
-      return;
-    }
-    
+    // ✅ ELIMINADO: Verificación de fondos de wallet
+    // Solo verificamos cantidad válida
     if (quantity <= 0 || quantity > stockItem.quantity) {
       setBuyingStatus({
         loading: false,
@@ -164,24 +154,24 @@ const StockDetail = () => {
       setBuyingStatus({ loading: true, error: '', success: '' });
       
       const result = await buyStock(symbol, quantity);
-
+  
       // Si la compra requiere pago con Webpay, redirigir al usuario
       if (result.requiresPayment && result.webpayUrl && result.webpayToken) {
         console.log('Redirigiendo a webpay:', result.webpayUrl);
-
+  
         setRedirectingToWebpay(true);
       
         setBuyingStatus({
           loading: false,
           error: '',
-          success: `¡Compra exitosa! ID de solicitud: ${result.request_id}`
+          success: `Redirigiendo a página de pago... Total: $${totalCost.toFixed(2)}`
         });
-
+  
         // Crea formulario para redirigir a Webpay
         const form = document.createElement('form');
         form.method = 'POST';
         form.action = result.webpayUrl;
-
+  
         const tokenInput = document.createElement('input');
         tokenInput.type = 'hidden';
         tokenInput.name = 'token_ws';
@@ -189,9 +179,9 @@ const StockDetail = () => {
         form.appendChild(tokenInput);
         document.body.appendChild(form);
         form.submit();
-        return; // Salir después de redirigir
+        return;
       }
-
+  
       // Si no hay Webpay, continuar con la compra normal
       setBuyingStatus({
         loading: false,
@@ -199,24 +189,18 @@ const StockDetail = () => {
         success: `¡Compra exitosa! ID de solicitud: ${result.request_id}`
       });
       
-      setRetryData(null); // Limpiar datos de reintento si fue exitoso
+      setRetryData(null);
       
-      // Actualizar wallet y stock después de la compra
-      const [newStockData, newWalletData] = await Promise.all([
-        getStockBySymbol(symbol),
-        getWalletBalance()
-      ]);
-      
+      // Actualizar stock después de la compra (sin wallet)
+      const newStockData = await getStockBySymbol(symbol);
       setStock(newStockData.data);
-      setWallet(newWalletData);
       
-      // Opcionalmente redirigir a compras después de un tiempo
+      // Redirigir a compras después de un tiempo
       setTimeout(() => {
         navigate('/my-purchases');
       }, 3000);
       
     } catch (err) {
-      // Guardar datos para posible reintento
       setRetryData({ symbol, quantity });
       setBuyingStatus({
         loading: false,
@@ -335,8 +319,9 @@ const StockDetail = () => {
         </div>
 
         <div className="buy-section">
-          <h3>Comprar acciones</h3>
-          <p>Tu saldo disponible: ${wallet.balance}</p>
+    <h3>Comprar acciones</h3>
+    <p>Cantidad disponible: {stockItem.quantity} acciones</p>
+    <p className="payment-info">💳 El pago se procesará via WebPay</p>
           
           <div className="quantity-selector">
             <label htmlFor="quantity">Cantidad:</label>
@@ -353,8 +338,8 @@ const StockDetail = () => {
           
           <div className="total-cost">
             <p>Costo total: ${totalCost.toFixed(2)}</p>
-            <p className={wallet.balance < totalCost ? 'error' : ''}>
-              {wallet.balance < totalCost ? 'Saldo insuficiente' : 'Saldo suficiente'}
+            <p className="payment-method">
+              🔒 Pago seguro con WebPay
             </p>
           </div>
           
@@ -382,7 +367,6 @@ const StockDetail = () => {
             disabled={
               buyingStatus.loading || 
               redirectingToWebpay ||
-              wallet.balance < totalCost || 
               quantity > maxQuantity
             }
             className={`buy-button ${redirectingToWebpay ? 'redirecting' : ''}`}
