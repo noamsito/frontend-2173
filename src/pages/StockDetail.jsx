@@ -59,11 +59,11 @@ const StockDetail = () => {
         const requestId = searchParams.get('request_id');
         
         if (status && message) {
-          // Limpiar los parámetros de la URL
-          setSearchParams({});
-          
-          // Resetear estado de redirección
+          // Resetear estado de redirección inmediatamente
           setRedirectingToWebpay(false);
+          
+          // Limpiar los parámetros de la URL después de procesar
+          setTimeout(() => setSearchParams({}), 100);
           
           switch (status) {
             case 'cancelled':
@@ -106,7 +106,7 @@ const StockDetail = () => {
     };
 
     fetchData();
-  }, [symbol, searchParams, setSearchParams, navigate]); // Antes era }, [symbol]); 
+  }, [symbol]);
 
   if (loading) {
     return <div className="loading">Cargando...</div>;
