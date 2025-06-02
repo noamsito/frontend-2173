@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { getStockBySymbol, buyStock, getWalletBalance } from '../api/apiService';
 
 const StockDetail = () => {
   const { symbol } = useParams();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [stock, setStock] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -12,11 +13,35 @@ const StockDetail = () => {
   const [wallet, setWallet] = useState({ balance: 0 });
   const [buyingStatus, setBuyingStatus] = useState({ loading: false, error: '', success: '' });
   const [retryData, setRetryData] = useState(null);
+  const [redirectingToWebpay, setRedirectingToWebpay] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
+
+        if (symbol === 'cancelado') {
+          setStock(null);
+          setLoading(false);
+        
+          // Mostrar mensaje de cancelación
+          const status = searchParams.get('status');
+          const message = searchParams.get('message');
+        
+          if (status === 'cancelled') {
+            setBuyingStatus({
+              loading: false,
+              error: message || 'Compra cancelada por el usuario',
+              success: ''
+            });
+          
+            // Redirigir a la lista de stocks después de 3 segundos
+            setTimeout(() => {
+              navigate('/stocks');
+            }, 3000);
+          }
+          return; // ← IMPORTANTE: salir aquí
+        }
         const [stockData, walletData] = await Promise.all([
           getStockBySymbol(symbol),
           getWalletBalance()
@@ -24,7 +49,57 @@ const StockDetail = () => {
         
         setStock(stockData.data);
         setWallet(walletData);
-        setError('');
+
+        const status = searchParams.get('status');
+        const message = searchParams.get('message');
+        const requestId = searchParams.get('request_id');
+        
+        if (status && message) {
+          // Limpiar los parámetros de la URL
+          setSearchParams({});
+          
+          // Resetear estado de redirección
+          setRedirectingToWebpay(false);
+          
+          switch (status) {
+            case 'cancelled':
+              setBuyingStatus({
+                loading: false,
+                error: message || 'Compra cancelada por el usuario',
+                success: ''
+              });
+              break;
+              
+            case 'success':
+              setBuyingStatus({
+                loading: false,
+                error: '',
+                success: message || '¡Compra realizada exitosamente!'
+              });
+              
+              // Si la compra fue exitosa, redirigir a "Mis Compras" después de un momento
+              setTimeout(() => {
+                navigate('/my-purchases');
+              }, 3000);
+              break;
+              
+            case 'failed':
+              setBuyingStatus({
+                loading: false,
+                error: message || 'El pago fue rechazado por el banco',
+                success: ''
+              });
+              break;
+              
+            case 'error':
+              setBuyingStatus({
+                loading: false,
+                error: message || 'Error al procesar el pago',
+                success: ''
+              });
+              break;
+          }
+        }
       } catch (err) {
         setError('Error al cargar los datos. Por favor, intenta de nuevo.');
         console.error(err);
@@ -34,7 +109,32 @@ const StockDetail = () => {
     };
 
     fetchData();
-  }, [symbol]);
+  }, [symbol, searchParams, setSearchParams, navigate]); // Antes era }, [symbol]); 
+
+  if (loading) {
+    return <div className="loading">Cargando...</div>;
+  }
+
+  if (symbol === 'cancelado') {
+    return (
+      <div className="stock-detail-container">
+        <button onClick={() => navigate('/stocks')} className="back-button">
+          ← Volver a la lista
+        </button>
+      
+        <h2>Compra Cancelada</h2>
+      
+        {buyingStatus.error && (
+          <div className="error-message">
+            {buyingStatus.error}
+          </div>
+        )}
+      
+        <p>Tu compra fue cancelada. Serás redirigido a la lista de stocks en unos segundos...</p>
+      </div>
+    );
+  }
+
 
   const handleBuy = async () => {
     if (!stock || stock.length === 0) return;
@@ -64,7 +164,35 @@ const StockDetail = () => {
       setBuyingStatus({ loading: true, error: '', success: '' });
       
       const result = await buyStock(symbol, quantity);
+
+      // Si la compra requiere pago con Webpay, redirigir al usuario
+      if (result.requiresPayment && result.webpayUrl && result.webpayToken) {
+        console.log('Redirigiendo a webpay:', result.webpayUrl);
+
+        setRedirectingToWebpay(true);
       
+        setBuyingStatus({
+          loading: false,
+          error: '',
+          success: `¡Compra exitosa! ID de solicitud: ${result.request_id}`
+        });
+
+        // Crea formulario para redirigir a Webpay
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = result.webpayUrl;
+
+        const tokenInput = document.createElement('input');
+        tokenInput.type = 'hidden';
+        tokenInput.name = 'token_ws';
+        tokenInput.value = result.webpayToken;
+        form.appendChild(tokenInput);
+        document.body.appendChild(form);
+        form.submit();
+        return; // Salir después de redirigir
+      }
+
+      // Si no hay Webpay, continuar con la compra normal
       setBuyingStatus({
         loading: false,
         error: '',
@@ -109,7 +237,34 @@ const StockDetail = () => {
       setBuyingStatus({ loading: true, error: '', success: '' });
       
       const result = await buyStock(retrySymbol, retryQuantity);
-      
+
+      // Si la compra requiere pago con Webpay, redirigir al usuario
+      if (result.requiresPayment && result.webpayUrl && result.webpayToken) {
+        console.log('Redirigiendo a webpay en reintento:', result.webpayUrl);
+
+        setRedirectingToWebpay(true);
+        
+        setBuyingStatus({
+          loading: false,
+          error: '',
+          success: `Redirigiendo a pagina de pago...`
+        });
+
+        // Crea formulario para redirigir a Webpay
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = result.webpayUrl;
+
+        const tokenInput = document.createElement('input');
+        tokenInput.type = 'hidden';
+        tokenInput.name = 'token_ws';
+        tokenInput.value = result.webpayToken;
+        form.appendChild(tokenInput);
+        document.body.appendChild(form);
+        form.submit();
+        return; // Salir después de redirigir
+      }
+      // Si no hay Webpay, continuar con la compra normal       
       setBuyingStatus({
         loading: false,
         error: '',
@@ -224,10 +379,20 @@ const StockDetail = () => {
           
           <button
             onClick={handleBuy}
-            disabled={buyingStatus.loading || wallet.balance < totalCost || quantity > maxQuantity}
-            className="buy-button"
+            disabled={
+              buyingStatus.loading || 
+              redirectingToWebpay ||
+              wallet.balance < totalCost || 
+              quantity > maxQuantity
+            }
+            className={`buy-button ${redirectingToWebpay ? 'redirecting' : ''}`}
           >
-            {buyingStatus.loading ? 'Procesando...' : 'Comprar'}
+            {redirectingToWebpay
+              ? 'Redirigiendo a Webpay...'
+              : buyingStatus.loading
+                ? 'Comprando...'
+                : `Comprar`
+            }
           </button>
         </div>
       </div>

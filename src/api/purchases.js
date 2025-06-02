@@ -8,17 +8,25 @@ console.log("🔧 API_URL configurada:", API_URL); // DEBUG
 // Función de ayuda para crear headers sin autenticación (temporal)
 const getAuthHeaders = async () => {
   return {}; // Sin headers por ahora
+  
 };
 
 // Obtener compras de un usuario - usar userId hardcodeado para testing
-export const getUserPurchases = async (userId = 1) => {
+export const getUserPurchases = async (token = null) => {
   try {
-    console.log("📡 Llamando a getUserPurchases para userId:", userId); // DEBUG
-    console.log("📡 URL completa:", `${API_URL}/api/purchases/user/${userId}`); // DEBUG
+    console.log("📡 Llamando a getUserPurchases con token:", token ? "✅ Presente" : "❌ Ausente");
+    //console.log("📡 URL completa:", `${API_URL}/api/purchases/user/${userId}`); // DEBUG
+    console.log("📡 URL completa:", `${API_URL}/purchases`);
     
-    const headers = await getAuthHeaders();
+    //const headers = await getAuthHeaders();
+    const headers = token ? {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    } : {};
+    
     const response = await axios.get(
-      `${API_URL}/api/purchases/user/${userId}`,
+      //`${API_URL}/api/purchases/user/${userId}`,
+      `${API_URL}/purchases`,
       { headers }
     );
     

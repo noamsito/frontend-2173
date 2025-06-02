@@ -1,24 +1,61 @@
 import { useState, useEffect } from 'react';
 import { getUserPurchases } from '../api/purchases';
 import { useAuth0 } from '@auth0/auth0-react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 
 const MyPurchases = () => {
-  const { user } = useAuth0();
+  const { user, getAccessTokenSilently } = useAuth0();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [purchases, setPurchases] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const [sortBy, setSortBy] = useState('date'); // date, symbol, value, performance
   const [filterBy, setFilterBy] = useState('all'); // all, profitable, losing
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
+
+    // Manejo de exito de compra
+    const status = searchParams.get('status');
+    const message = searchParams.get('message');
+
+    if (status === 'success' && message) {
+      setSuccessMessage(message);
+      setSearchParams({}); // Limpiar parámetros de búsqueda
+
+      setTimeout(() => {
+        setSuccessMessage('');
+      }
+      , 5000); // Ocultar mensaje después de 5 segundos
+    }
     fetchPurchases();
   }, []);
 
   const fetchPurchases = async () => {
     try {
       setLoading(true);
+
+      // Obtener token de acceso
+      let token = null;
+      try {
+        token = await getAccessTokenSilently();
+        console.log("🔑 Token obtenido exitosamente"); // DEBUG
+      } catch (tokenError) {
+        console.warn('Error obteniendo token de acceso:', tokenError);
+      }
+      const data = await getUserPurchases(token);
+      setPurchases(data || []);
+      setError('');
+    } catch (err) {
+      setError('Error al cargar las compras. Por favor, intenta de nuevo.');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+      /*
       const data = await getUserPurchases(1); // Siempre usar userId = 1
       setPurchases(data || []);
       setError('');
@@ -29,6 +66,7 @@ const MyPurchases = () => {
       setLoading(false);
     }
   };
+  */
 
   // Función para formatear fechas
   const formatDate = (dateString) => {
@@ -149,6 +187,11 @@ const MyPurchases = () => {
         <h2>Mis Compras</h2>
         <p>Gestiona y analiza tu portafolio de inversiones</p>
       </div>
+
+      {/* Mensaje de éxito de compra */}
+      {successMessage && (
+        <div className="success-message"> {successMessage} </div>
+      )}
 
       {/* Estadísticas Generales */}
       <div className="stats-overview">

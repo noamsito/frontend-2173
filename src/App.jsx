@@ -12,7 +12,7 @@ import EventLog from './pages/EventLog';
 
 import './App.css';
 import './styles/purchases.css';
-import './components/SystemStatus.css'; // ← AGREGAR ESTA LÍNEA
+//import './components/SystemStatus.css'; // ← AGREGAR ESTA LÍNEA
 
 function App() {
   const { isLoading, error, isAuthenticated, user } = useAuth0();
