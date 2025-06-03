@@ -1,6 +1,7 @@
 import axios from "axios";
 import { getAuth0Client } from "../auth0-config.jsx"; // Cambia .js por .jsx
 
+
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 // Para obtener el token de Auth0
@@ -76,7 +77,19 @@ export const buyStock = async (symbol, quantity) => {
       { symbol, quantity },
       { headers }
     );
-    return response.data;
+    // Agregado de webpay
+    const data = response.data;
+    console.log("Respuesta del backend:", data); // DEBUG
+    // Si hay datos de Webpay, redirigir a la URL de pago
+    if (data.webpay && data.webpay.url && data.webpay.token) {
+      return {
+        ...data,
+        requiresPayment: true,
+        webpayUrl: data.webpay.url,
+        webpayToken: data.webpay.token
+      };
+    }
+    return data;
   } catch (err) {
     console.error("Error al comprar acciones:", err);
     throw err;

@@ -12,7 +12,9 @@ import EventLog from './pages/EventLog';
 
 import './App.css';
 import './styles/purchases.css';
+
 import './styles/SystemStatus.css'; // Cambia aquí la ruta correcta
+
 
 function App() {
   const { isLoading, error, isAuthenticated, user } = useAuth0();
