@@ -11,7 +11,9 @@ import EventLog from './pages/EventLog';
 import './styles/SystemStatus.css';
 import './styles/EventLog.css';
 import './styles/stock-detail.css';
-
+import './App.css';
+import './styles/purchases.css';
+import './styles/SystemStatus.css';
 
 function App() {
   const { isLoading, error, isAuthenticated, user } = useAuth0();
