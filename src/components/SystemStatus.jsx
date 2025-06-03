@@ -13,7 +13,7 @@ const SystemStatus = () => {
   useEffect(() => {
     const fetchStatus = async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/purchases/stats`);
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://r12c7vfhig.execute-api.us-east-1.amazonaws.com/prod'}/api/purchases/stats`);
         
         if (response.ok) {
           const data = await response.json();
