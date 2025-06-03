@@ -111,7 +111,7 @@ export default function TestStocks() {
         <div className="stocks-container">
             <div className="page-header">
                 <h2>📈 Listado de Stocks Disponibles</h2>
-                <p>Explora y compra acciones del mercado</p>
+                <p>Explora y compra acciones del mercado en tiempo real</p>
             </div>
             
             {message && (
@@ -124,7 +124,7 @@ export default function TestStocks() {
                 <div className="filters-header">
                     <div className="count-filter">
                         <label>
-                            Items por página:
+                            📊 Items por página:
                             <select 
                                 value={count} 
                                 onChange={(e) => setCount(parseInt(e.target.value))}
@@ -140,8 +140,9 @@ export default function TestStocks() {
                     <button 
                         className="toggle-filters-button"
                         onClick={() => setShowFilters(!showFilters)}
+                        disabled={loading}
                     >
-                        {showFilters ? '🔒 Ocultar filtros' : '🔍 Mostrar filtros'}
+                        {showFilters ? '🔒 Ocultar Filtros' : '🔍 Mostrar Filtros'}
                     </button>
                 </div>
                 
@@ -150,7 +151,7 @@ export default function TestStocks() {
                         <form onSubmit={handleApplyFilters}>
                             <div className="filters-grid">
                                 <div className="filter-group">
-                                    <label htmlFor="symbol">Símbolo:</label>
+                                    <label htmlFor="symbol">🏷️ Símbolo:</label>
                                     <input
                                         id="symbol"
                                         name="symbol"
@@ -158,11 +159,12 @@ export default function TestStocks() {
                                         value={filters.symbol}
                                         onChange={handleFilterChange}
                                         placeholder="Ej: AAPL"
+                                        disabled={loading}
                                     />
                                 </div>
                                 
                                 <div className="filter-group">
-                                    <label htmlFor="name">Nombre:</label>
+                                    <label htmlFor="name">🏢 Nombre:</label>
                                     <input
                                         id="name"
                                         name="name"
@@ -170,11 +172,12 @@ export default function TestStocks() {
                                         value={filters.name}
                                         onChange={handleFilterChange}
                                         placeholder="Ej: Apple Inc."
+                                        disabled={loading}
                                     />
                                 </div>
                                 
                                 <div className="filter-group">
-                                    <label htmlFor="minPrice">Precio mínimo:</label>
+                                    <label htmlFor="minPrice">💰 Precio Mínimo:</label>
                                     <input
                                         id="minPrice"
                                         name="minPrice"
@@ -184,11 +187,12 @@ export default function TestStocks() {
                                         value={filters.minPrice}
                                         onChange={handleFilterChange}
                                         placeholder="Ej: 10.00"
+                                        disabled={loading}
                                     />
                                 </div>
                                 
                                 <div className="filter-group">
-                                    <label htmlFor="maxPrice">Precio máximo:</label>
+                                    <label htmlFor="maxPrice">💸 Precio Máximo:</label>
                                     <input
                                         id="maxPrice"
                                         name="maxPrice"
@@ -198,11 +202,12 @@ export default function TestStocks() {
                                         value={filters.maxPrice}
                                         onChange={handleFilterChange}
                                         placeholder="Ej: 100.00"
+                                        disabled={loading}
                                     />
                                 </div>
                                 
                                 <div className="filter-group">
-                                    <label htmlFor="minQuantity">Cantidad mínima:</label>
+                                    <label htmlFor="minQuantity">📦 Cantidad Mínima:</label>
                                     <input
                                         id="minQuantity"
                                         name="minQuantity"
@@ -212,11 +217,12 @@ export default function TestStocks() {
                                         value={filters.minQuantity}
                                         onChange={handleFilterChange}
                                         placeholder="Ej: 10"
+                                        disabled={loading}
                                     />
                                 </div>
                                 
                                 <div className="filter-group">
-                                    <label htmlFor="maxQuantity">Cantidad máxima:</label>
+                                    <label htmlFor="maxQuantity">📋 Cantidad Máxima:</label>
                                     <input
                                         id="maxQuantity"
                                         name="maxQuantity"
@@ -226,17 +232,19 @@ export default function TestStocks() {
                                         value={filters.maxQuantity}
                                         onChange={handleFilterChange}
                                         placeholder="Ej: 1000"
+                                        disabled={loading}
                                     />
                                 </div>
                                 
                                 <div className="filter-group">
-                                    <label htmlFor="date">Fecha:</label>
+                                    <label htmlFor="date">📅 Fecha:</label>
                                     <input
                                         id="date"
                                         name="date"
                                         type="date"
                                         value={filters.date}
                                         onChange={handleFilterChange}
+                                        disabled={loading}
                                     />
                                 </div>
                             </div>
@@ -247,7 +255,7 @@ export default function TestStocks() {
                                     className="apply-filters-button"
                                     disabled={loading}
                                 >
-                                    Aplicar filtros
+                                    ✅ Aplicar Filtros
                                 </button>
                                 <button
                                     type="button"
@@ -255,7 +263,7 @@ export default function TestStocks() {
                                     onClick={handleResetFilters}
                                     disabled={loading}
                                 >
-                                    Limpiar filtros
+                                    🔄 Limpiar Filtros
                                 </button>
                             </div>
                         </form>
@@ -266,16 +274,26 @@ export default function TestStocks() {
             {loading && (
                 <div className="loading-state">
                     <div className="spinner"></div>
-                    <p>Cargando stocks...</p>
+                    <p>Cargando stocks del mercado...</p>
                 </div>
             )}
             
-            {error && <div className="error-message">{error}</div>}
+            {error && (
+                <div className="error-message">
+                    {error}
+                </div>
+            )}
             
             {!loading && stocks.length === 0 && !error && (
                 <div className="empty-state">
-                    <h3>No hay stocks disponibles</h3>
-                    <p>No se encontraron stocks con los filtros aplicados</p>
+                    <h3>📭 No hay stocks disponibles</h3>
+                    <p>No se encontraron stocks con los filtros aplicados. Intenta modificar los criterios de búsqueda.</p>
+                    <button 
+                        onClick={handleResetFilters} 
+                        className="btn btn-primary"
+                    >
+                        🔄 Resetear Filtros
+                    </button>
                 </div>
             )}
             
@@ -294,13 +312,25 @@ export default function TestStocks() {
                                     
                                     <div className="stock-details">
                                         <div className="detail-row">
-                                            <span className="label">Cantidad disponible:</span>
-                                            <span className="value">{stock.quantity}</span>
+                                            <span className="label">📦 Cantidad disponible:</span>
+                                            <span className="value">{stock.quantity.toLocaleString()}</span>
                                         </div>
                                         <div className="detail-row">
-                                            <span className="label">Última actualización:</span>
+                                            <span className="label">🕒 Última actualización:</span>
                                             <span className="value">
-                                                {new Date(stock.timestamp).toLocaleDateString()}
+                                                {new Date(stock.timestamp).toLocaleDateString('es-ES', {
+                                                    year: 'numeric',
+                                                    month: 'short',
+                                                    day: 'numeric',
+                                                    hour: '2-digit',
+                                                    minute: '2-digit'
+                                                })}
+                                            </span>
+                                        </div>
+                                        <div className="detail-row">
+                                            <span className="label">💹 Valor de mercado:</span>
+                                            <span className="value">
+                                                ${(stock.price * stock.quantity).toLocaleString()}
                                             </span>
                                         </div>
                                     </div>
@@ -309,7 +339,7 @@ export default function TestStocks() {
                                 <div className="stock-actions">
                                     <Link 
                                         to={`/stocks/${stock.symbol}`} 
-                                        className="btn btn-primary"
+                                        className="btn btn-success"
                                     >
                                         🛒 Comprar Acciones
                                     </Link>
@@ -332,7 +362,9 @@ export default function TestStocks() {
                         >
                             ← Anterior
                         </button>
-                        <span className="page-info">Página {page}</span>
+                        <span className="page-info">
+                            📄 Página {page} • {stocks.length} elementos
+                        </span>
                         <button 
                             onClick={handleNextPage} 
                             disabled={stocks.length < count || loading}
@@ -350,7 +382,7 @@ export default function TestStocks() {
                     disabled={loading} 
                     className="btn btn-outline"
                 >
-                    🔄 Actualizar Lista
+                    🔄 Actualizar Lista de Stocks
                 </button>
             </div>
         </div>

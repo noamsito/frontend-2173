@@ -1,102 +1,23 @@
 /* ================================
-   PÁGINA DE STOCKS
+   ESTILOS PARA MÓDULO DE STOCKS
    ================================ */
 
+/* ================================
+   CONTENEDOR PRINCIPAL
+   ================================ */
    .stocks-container {
-    background: var(--secondary-light);
-    border-radius: var(--border-radius-lg);
-    padding: var(--spacing-8);
-    box-shadow: var(--shadow-md);
-    margin-bottom: var(--spacing-6);
-  }
-  
-  .stocks-container h2 {
-    color: var(--primary-dark);
-    margin-bottom: var(--spacing-6);
-    font-size: var(--font-size-3xl);
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-3);
+    max-width: 1400px;
+    margin: 0 auto;
   }
   
   /* ================================
-     BILLETERA SECTION
-     ================================ */
-  .wallet-section {
-    background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-100) 100%);
-    padding: var(--spacing-5);
-    border-radius: var(--border-radius-lg);
-    margin: var(--spacing-6) 0;
-    border: 2px solid var(--gray-200);
-    box-shadow: var(--shadow-sm);
-  }
-  
-  .wallet-info {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: var(--spacing-4);
-  }
-  
-  .wallet-details h3 {
-    margin: 0 0 var(--spacing-2) 0;
-    color: var(--gray-700);
-    font-size: var(--font-size-lg);
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-2);
-  }
-  
-  .wallet-balance {
-    margin: 0;
-    font-size: var(--font-size-2xl);
-    font-weight: 700;
-    color: var(--success);
-    background: linear-gradient(135deg, var(--success) 0%, var(--success-dark) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-  
-  /* ================================
-     MENSAJES DE COMPRA
-     ================================ */
-  .purchase-message {
-    padding: var(--spacing-4) var(--spacing-5);
-    margin: var(--spacing-4) 0;
-    border-radius: var(--border-radius);
-    font-weight: 600;
-    text-align: center;
-    animation: slideIn 0.3s ease-out;
-    box-shadow: var(--shadow-sm);
-    border-left: 4px solid;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--spacing-2);
-  }
-  
-  .purchase-message.success {
-    background: linear-gradient(135deg, rgba(72, 187, 120, 0.1) 0%, rgba(72, 187, 120, 0.05) 100%);
-    color: var(--success-dark);
-    border-color: var(--success);
-  }
-  
-  .purchase-message.error {
-    background: linear-gradient(135deg, rgba(229, 62, 62, 0.1) 0%, rgba(229, 62, 62, 0.05) 100%);
-    color: var(--error-dark);
-    border-color: var(--error);
-  }
-  
-  /* ================================
-     FILTROS SECTION
+     SECCIÓN DE FILTROS MEJORADA
      ================================ */
   .filters-section {
-    background: var(--gray-50);
+    background: var(--secondary-light);
     border-radius: var(--border-radius-lg);
-    padding: var(--spacing-5);
-    margin-bottom: var(--spacing-6);
+    padding: var(--spacing-6);
+    margin-bottom: var(--spacing-8);
     border: 1px solid var(--gray-200);
     box-shadow: var(--shadow-sm);
   }
@@ -123,6 +44,7 @@
     display: flex;
     align-items: center;
     gap: var(--spacing-2);
+    font-size: var(--font-size-base);
   }
   
   .count-filter select {
@@ -132,34 +54,50 @@
     border: 2px solid var(--gray-300);
     border-radius: var(--border-radius);
     background-color: white;
+    font-size: var(--font-size-base);
+    transition: border-color var(--transition-fast);
+  }
+  
+  .count-filter select:focus {
+    border-color: var(--primary);
+    outline: none;
   }
   
   .toggle-filters-button {
-    background: var(--primary-light);
+    background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%);
     border: none;
-    padding: var(--spacing-3) var(--spacing-4);
+    padding: var(--spacing-3) var(--spacing-5);
     border-radius: var(--border-radius);
     color: white;
     font-weight: 500;
     cursor: pointer;
     transition: all var(--transition-fast);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    box-shadow: var(--shadow-sm);
   }
   
   .toggle-filters-button:hover {
-    background: var(--primary);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
     transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
   }
   
+  /* ================================
+     FILTROS AVANZADOS
+     ================================ */
   .advanced-filters {
-    padding-top: var(--spacing-4);
-    border-top: 1px solid var(--gray-200);
+    padding-top: var(--spacing-5);
+    border-top: 2px solid var(--gray-200);
+    margin-top: var(--spacing-4);
   }
   
   .filters-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: var(--spacing-4);
-    margin-bottom: var(--spacing-5);
+    margin-bottom: var(--spacing-6);
   }
   
   .filter-group {
@@ -172,6 +110,8 @@
     color: var(--gray-700);
     margin-bottom: var(--spacing-2);
     font-size: var(--font-size-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
   }
   
   .filter-group input {
@@ -179,13 +119,19 @@
     border: 2px solid var(--gray-300);
     border-radius: var(--border-radius);
     font-size: var(--font-size-base);
-    transition: border-color var(--transition-fast);
+    transition: all var(--transition-fast);
+    background: white;
   }
   
   .filter-group input:focus {
     border-color: var(--primary);
     outline: none;
     box-shadow: 0 0 0 3px rgba(26, 54, 93, 0.1);
+  }
+  
+  .filter-group input::placeholder {
+    color: var(--gray-500);
+    font-style: italic;
   }
   
   .filter-actions {
@@ -195,41 +141,267 @@
   }
   
   .apply-filters-button {
-    background: var(--primary);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
     color: white;
     border: none;
-    padding: var(--spacing-3) var(--spacing-5);
+    padding: var(--spacing-3) var(--spacing-6);
     border-radius: var(--border-radius);
     font-weight: 500;
     cursor: pointer;
     transition: all var(--transition-fast);
+    box-shadow: var(--shadow-sm);
+    flex: 1;
+    min-width: 120px;
   }
   
   .apply-filters-button:hover {
-    background: var(--primary-dark);
+    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
     transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
   }
   
   .reset-filters-button {
-    background: var(--gray-500);
+    background: linear-gradient(135deg, var(--gray-500) 0%, var(--gray-600) 100%);
     color: white;
     border: none;
-    padding: var(--spacing-3) var(--spacing-5);
+    padding: var(--spacing-3) var(--spacing-6);
     border-radius: var(--border-radius);
     font-weight: 500;
     cursor: pointer;
     transition: all var(--transition-fast);
+    box-shadow: var(--shadow-sm);
+    flex: 1;
+    min-width: 120px;
   }
   
   .reset-filters-button:hover {
-    background: var(--gray-600);
+    background: linear-gradient(135deg, var(--gray-600) 0%, var(--gray-700) 100%);
     transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
   }
   
   /* ================================
-     TABLA DE STOCKS
+     MENSAJES DE BANNER
+     ================================ */
+  .message-banner {
+    padding: var(--spacing-4) var(--spacing-6);
+    margin-bottom: var(--spacing-6);
+    border-radius: var(--border-radius);
+    font-weight: 600;
+    text-align: center;
+    animation: slideIn 0.3s ease-out;
+    box-shadow: var(--shadow-sm);
+    border-left: 4px solid;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-3);
+  }
+  
+  .message-banner.success {
+    background: linear-gradient(135deg, rgba(72, 187, 120, 0.1) 0%, rgba(72, 187, 120, 0.05) 100%);
+    color: var(--success-dark);
+    border-color: var(--success);
+  }
+  
+  .message-banner.success::before {
+    content: '✅';
+    font-size: var(--font-size-lg);
+  }
+  
+  .message-banner.error {
+    background: linear-gradient(135deg, rgba(229, 62, 62, 0.1) 0%, rgba(229, 62, 62, 0.05) 100%);
+    color: var(--error-dark);
+    border-color: var(--error);
+  }
+  
+  .message-banner.error::before {
+    content: '❌';
+    font-size: var(--font-size-lg);
+  }
+  
+  .message-banner.info {
+    background: linear-gradient(135deg, rgba(44, 82, 130, 0.1) 0%, rgba(44, 82, 130, 0.05) 100%);
+    color: var(--primary-dark);
+    border-color: var(--primary);
+  }
+  
+  .message-banner.info::before {
+    content: 'ℹ️';
+    font-size: var(--font-size-lg);
+  }
+  
+  /* ================================
+     LISTA DE STOCKS (TARJETAS)
      ================================ */
   .stocks-list {
+    margin-bottom: var(--spacing-8);
+  }
+  
+  .stocks-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: var(--spacing-6);
+    margin-bottom: var(--spacing-8);
+  }
+  
+  .stock-card {
+    background: var(--secondary-light);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-6);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--gray-200);
+    transition: all var(--transition-normal);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .stock-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: var(--gray-300);
+    transition: background var(--transition-fast);
+  }
+  
+  .stock-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-xl);
+  }
+  
+  .stock-card:hover::before {
+    background: linear-gradient(90deg, var(--primary) 0%, var(--primary-light) 100%);
+  }
+  
+  /* ================================
+     HEADER DE TARJETA DE STOCK
+     ================================ */
+  .stock-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-5);
+    padding-bottom: var(--spacing-4);
+    border-bottom: 2px solid var(--gray-200);
+  }
+  
+  .stock-symbol {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    color: white;
+    padding: var(--spacing-2) var(--spacing-4);
+    border-radius: var(--border-radius);
+    font-size: var(--font-size-lg);
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .stock-price {
+    font-size: var(--font-size-2xl);
+    font-weight: 700;
+    color: var(--success);
+    background: linear-gradient(135deg, var(--success) 0%, var(--success-dark) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  /* ================================
+     CONTENIDO DE TARJETA DE STOCK
+     ================================ */
+  .stock-content {
+    margin-bottom: var(--spacing-6);
+  }
+  
+  .stock-name {
+    color: var(--primary-dark);
+    font-size: var(--font-size-xl);
+    font-weight: 600;
+    margin-bottom: var(--spacing-4);
+    line-height: 1.3;
+  }
+  
+  .stock-details {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-3);
+  }
+  
+  .detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-2) 0;
+    border-bottom: 1px solid var(--gray-200);
+  }
+  
+  .detail-row:last-child {
+    border-bottom: none;
+  }
+  
+  .detail-row .label {
+    color: var(--gray-700);
+    font-size: var(--font-size-base);
+    font-weight: 500;
+  }
+  
+  .detail-row .value {
+    font-weight: 600;
+    color: var(--text-dark);
+    font-size: var(--font-size-base);
+  }
+  
+  /* ================================
+     ACCIONES DE STOCK
+     ================================ */
+  .stock-actions {
+    display: flex;
+    gap: var(--spacing-3);
+    flex-wrap: wrap;
+  }
+  
+  .stock-actions .btn {
+    flex: 1;
+    min-width: 140px;
+    justify-content: center;
+    font-size: var(--font-size-sm);
+    padding: var(--spacing-3) var(--spacing-4);
+  }
+  
+  /* ================================
+     ACCIONES DE PÁGINA
+     ================================ */
+  .page-actions {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: var(--spacing-8);
+    padding-top: var(--spacing-6);
+    border-top: 2px solid var(--gray-200);
+  }
+  
+  .page-actions .btn {
+    min-width: 200px;
+    background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%);
+    color: white;
+    font-weight: 600;
+    font-size: var(--font-size-base);
+    padding: var(--spacing-4) var(--spacing-6);
+  }
+  
+  .page-actions .btn:hover {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+  }
+  
+  /* ================================
+     TABLA DE STOCKS (ALTERNATIVA)
+     ================================ */
+  .stocks-table {
     background: white;
     border-radius: var(--border-radius-lg);
     box-shadow: var(--shadow-md);
@@ -237,12 +409,12 @@
     border: 1px solid var(--gray-200);
   }
   
-  .stocks-list table {
+  .stocks-table table {
     width: 100%;
     border-collapse: collapse;
   }
   
-  .stocks-list th {
+  .stocks-table th {
     background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
     color: white;
     padding: var(--spacing-4);
@@ -253,205 +425,18 @@
     letter-spacing: 0.05em;
   }
   
-  .stocks-list td {
+  .stocks-table td {
     padding: var(--spacing-4);
     border-bottom: 1px solid var(--gray-200);
     vertical-align: middle;
   }
   
-  .stocks-list tr:hover {
+  .stocks-table tr:hover {
     background-color: var(--gray-50);
   }
   
-  .stocks-list tr:last-child td {
+  .stocks-table tr:last-child td {
     border-bottom: none;
-  }
-  
-  /* ================================
-     COLUMNA DE COMPRA
-     ================================ */
-  .purchase-cell {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-2);
-    align-items: center;
-    min-width: 120px;
-  }
-  
-  .purchase-button {
-    background: linear-gradient(135deg, var(--success) 0%, var(--success-dark) 100%);
-    color: white;
-    border: none;
-    padding: var(--spacing-2) var(--spacing-3);
-    border-radius: var(--border-radius);
-    font-weight: 500;
-    cursor: pointer;
-    transition: all var(--transition-fast);
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-1);
-    min-width: 80px;
-    justify-content: center;
-    font-size: var(--font-size-sm);
-  }
-  
-  .purchase-button:hover:not(:disabled) {
-    background: linear-gradient(135deg, var(--success-dark) 0%, var(--success) 100%);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
-  }
-  
-  .purchase-button:disabled {
-    background: var(--gray-400);
-    cursor: not-allowed;
-    transform: none;
-  }
-  
-  .purchase-button.loading {
-    background: linear-gradient(135deg, var(--warning) 0%, var(--warning-dark) 100%);
-    animation: pulse 1s infinite;
-  }
-  
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.7; }
-  }
-  
-  .quantity-selector {
-    padding: var(--spacing-1) var(--spacing-2);
-    border: 2px solid var(--gray-300);
-    border-radius: var(--border-radius);
-    font-size: var(--font-size-xs);
-    min-width: 50px;
-    text-align: center;
-    background: white;
-    transition: border-color var(--transition-fast);
-  }
-  
-  .quantity-selector:focus {
-    border-color: var(--primary);
-    outline: none;
-  }
-  
-  .quantity-selector:disabled {
-    background: var(--gray-100);
-    cursor: not-allowed;
-  }
-  
-  .purchase-status {
-    font-size: var(--font-size-xs);
-    font-weight: 500;
-    text-align: center;
-    margin-top: var(--spacing-1);
-  }
-  
-  .purchase-status.no-stock {
-    color: var(--error);
-  }
-  
-  .purchase-status.insufficient-funds {
-    color: var(--warning);
-  }
-  
-  /* ================================
-     BOTONES DE ACCIÓN
-     ================================ */
-  .view-button {
-    background: var(--primary-light);
-    color: white;
-    border: none;
-    padding: var(--spacing-2) var(--spacing-3);
-    border-radius: var(--border-radius);
-    font-weight: 500;
-    cursor: pointer;
-    transition: all var(--transition-fast);
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: var(--font-size-sm);
-  }
-  
-  .view-button:hover {
-    background: var(--primary);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-sm);
-    text-decoration: none;
-    color: white;
-  }
-  
-  /* ================================
-     PAGINACIÓN
-     ================================ */
-  .pagination {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: var(--spacing-4);
-    margin-top: var(--spacing-6);
-    padding: var(--spacing-4);
-    background: var(--gray-50);
-    border-radius: var(--border-radius);
-  }
-  
-  .pagination button {
-    background: var(--primary);
-    color: white;
-    border: none;
-    padding: var(--spacing-3) var(--spacing-4);
-    border-radius: var(--border-radius);
-    font-weight: 500;
-    cursor: pointer;
-    transition: all var(--transition-fast);
-  }
-  
-  .pagination button:hover:not(:disabled) {
-    background: var(--primary-dark);
-    transform: translateY(-1px);
-  }
-  
-  .pagination button:disabled {
-    background: var(--gray-400);
-    cursor: not-allowed;
-    transform: none;
-  }
-  
-  .pagination span {
-    font-weight: 600;
-    color: var(--primary-dark);
-    padding: 0 var(--spacing-2);
-  }
-  
-  /* ================================
-     BOTÓN REFRESH
-     ================================ */
-  .refresh-button {
-    background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%);
-    color: white;
-    border: none;
-    padding: var(--spacing-4) var(--spacing-6);
-    border-radius: var(--border-radius);
-    font-weight: 600;
-    cursor: pointer;
-    transition: all var(--transition-fast);
-    margin-top: var(--spacing-6);
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-2);
-    mx-auto;
-    min-height: 48px;
-  }
-  
-  .refresh-button:hover:not(:disabled) {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
-  }
-  
-  .refresh-button:disabled {
-    background: var(--gray-400);
-    cursor: not-allowed;
-    transform: none;
   }
   
   /* ================================
@@ -462,14 +447,26 @@
       grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     }
     
-    .wallet-info {
+    .stocks-grid {
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    }
+    
+    .filters-header {
       flex-direction: column;
-      text-align: center;
+      align-items: stretch;
+    }
+    
+    .count-filter {
+      justify-content: center;
     }
   }
   
   @media (max-width: 768px) {
     .stocks-container {
+      padding: var(--spacing-4);
+    }
+    
+    .filters-section {
       padding: var(--spacing-4);
     }
     
@@ -490,55 +487,73 @@
       grid-template-columns: 1fr;
     }
     
-    .stocks-list {
-      overflow-x: auto;
+    .stocks-grid {
+      grid-template-columns: 1fr;
     }
     
-    .stocks-list table {
-      min-width: 600px;
+    .stock-actions {
+      flex-direction: column;
     }
     
-    .stocks-list th,
-    .stocks-list td {
-      padding: var(--spacing-3) var(--spacing-2);
-      font-size: var(--font-size-sm);
-    }
-    
-    .purchase-cell {
-      min-width: 100px;
+    .stock-actions .btn {
+      width: 100%;
     }
     
     .pagination {
       flex-direction: column;
-      gap: var(--spacing-2);
+      gap: var(--spacing-3);
+    }
+    
+    .pagination .btn {
+      width: 100%;
+      max-width: 200px;
+    }
+    
+    .stocks-table {
+      overflow-x: auto;
+    }
+    
+    .stocks-table table {
+      min-width: 600px;
     }
   }
   
   @media (max-width: 640px) {
-    .wallet-section {
-      padding: var(--spacing-4);
+    .stock-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--spacing-3);
     }
     
-    .wallet-balance {
+    .stock-price {
       font-size: var(--font-size-xl);
     }
     
-    .purchase-message {
+    .stock-card {
+      padding: var(--spacing-4);
+    }
+    
+    .page-actions .btn {
+      width: 100%;
+      max-width: none;
+    }
+    
+    .message-banner {
       padding: var(--spacing-3);
+      font-size: var(--font-size-sm);
+      flex-direction: column;
+      text-align: center;
+    }
+    
+    .stocks-table th,
+    .stocks-table td {
+      padding: var(--spacing-3) var(--spacing-2);
       font-size: var(--font-size-sm);
     }
     
-    .stocks-list table {
-      min-width: 500px;
-    }
-    
-    .purchase-cell {
-      min-width: 80px;
-    }
-    
-    .purchase-button,
-    .view-button {
-      padding: var(--spacing-1) var(--spacing-2);
-      font-size: var(--font-size-xs);
+    .detail-row {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--spacing-1);
     }
   }

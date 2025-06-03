@@ -1,253 +1,641 @@
-/* Estilos para el listado de compras */
-.purchases-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 1.5rem;
-  margin-top: 2rem;
-}
+/* ================================
+   ESTILOS PARA MÓDULO DE COMPRAS
+   ================================ */
 
-.purchase-card {
-  background: white;
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
-  border: 1px solid var(--gray-light);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.purchase-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.12);
-}
-
-.purchase-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid var(--gray-light);
-}
-
-.purchase-symbol .symbol {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--primary);
-  background: var(--primary-light);
-  color: white;
-  padding: 0.25rem 0.75rem;
-  border-radius: 6px;
-}
-
-.purchase-date {
-  font-size: 0.85rem;
-  color: var(--gray-dark);
-}
-
-.purchase-details {
-  margin-bottom: 1.5rem;
-}
-
-.detail-row {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 0.5rem;
-}
-
-.detail-row .label {
-  color: var(--gray-dark);
-  font-size: 0.9rem;
-}
-
-.detail-row .value {
-  font-weight: 600;
-  color: var(--text-dark);
-}
-
-.detail-row .total {
-  color: var(--primary);
-  font-size: 1.1rem;
-}
-
-.purchase-actions {
-  display: flex;
-  gap: 0.75rem;
-}
-
-/* Estilos para el detalle de compra */
-.purchase-detail-container {
-  max-width: 1000px;
-  margin: 0 auto;
-}
-
-.detail-header {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 2rem;
-}
-
-.symbol-badge {
-  background: linear-gradient(135deg, var(--primary), var(--primary-light));
-  padding: 0.5rem 1rem;
-  border-radius: 25px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.symbol-text {
-  color: white;
-  font-weight: 700;
-  font-size: 1.1rem;
-}
-
-.estimation-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 2rem;
-}
-
-.estimation-card {
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  border: 2px solid var(--primary-light);
-}
-
-.estimation-main {
-  text-align: center;
-}
-
-.estimated-value {
-  margin-bottom: 1rem;
-}
-
-.estimated-value .label {
-  display: block;
-  color: var(--gray-dark);
-  font-size: 0.9rem;
-  margin-bottom: 0.5rem;
-}
-
-.value-large {
-  display: block;
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: var(--primary-dark);
-  line-height: 1;
-}
-
-.growth-indicator {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  font-size: 1.1rem;
-  font-weight: 600;
-}
-
-.growth-icon {
-  font-size: 1.5rem;
-}
-
-.analysis-card {
-  background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%);
-  border: 2px solid var(--success);
-}
-
-.metric {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 1rem;
-  padding: 0.75rem;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.metric-label {
-  color: var(--gray-dark);
-  font-weight: 500;
-}
-
-.metric-value {
-  font-weight: 700;
-  font-size: 1.1rem;
-}
-
-.performance-bar {
-  margin-top: 1rem;
-}
-
-.bar-container {
-  height: 8px;
-  background: var(--gray-light);
-  border-radius: 4px;
-  overflow: hidden;
-  margin-bottom: 0.5rem;
-}
-
-.bar-fill {
-  height: 100%;
-  transition: width 0.8s ease;
-  border-radius: 4px;
-}
-
-.bar-label {
-  font-size: 0.85rem;
-  color: var(--gray-dark);
-}
-
-.info-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.info-item {
-  display: flex;
-  justify-content: space-between;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid var(--gray-light);
-}
-
-.info-item:last-child {
-  border-bottom: none;
-}
-
-.actions-section {
-  display: flex;
-  gap: 1rem;
-  justify-content: center;
-  margin-top: 2rem;
-  padding-top: 2rem;
-  border-top: 1px solid var(--gray-light);
-}
-
-.empty-state {
-  text-align: center;
-  padding: 3rem 1rem;
-  color: var(--gray-dark);
-}
-
-.empty-state h3 {
-  color: var(--primary-dark);
-  margin-bottom: 1rem;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
+/* ================================
+   CONTENEDOR PRINCIPAL
+   ================================ */
+   .purchases-container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  
+  /* ================================
+     ESTADÍSTICAS GENERALES
+     ================================ */
+  .stats-overview {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-6);
+    margin-bottom: var(--spacing-8);
+  }
+  
+  .stat-card {
+    background: linear-gradient(135deg, var(--secondary-light) 0%, var(--gray-100) 100%);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-6);
+    text-align: center;
+    box-shadow: var(--shadow-md);
+    border: 2px solid var(--gray-200);
+    transition: all var(--transition-normal);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary) 0%, var(--primary-light) 100%);
+  }
+  
+  .stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+  }
+  
+  .stat-label {
+    display: block;
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    color: var(--gray-600);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: var(--spacing-2);
+  }
+  
+  .stat-value {
+    display: block;
+    font-size: var(--font-size-2xl);
+    font-weight: 700;
+    color: var(--primary-dark);
+    line-height: 1.2;
+  }
+  
+  .stat-value.positive {
+    color: var(--success);
+  }
+  
+  .stat-value.negative {
+    color: var(--error);
+  }
+  
+  /* ================================
+     CONTROLES DE FILTRO Y BÚSQUEDA
+     ================================ */
+  .controls-section {
+    background: var(--secondary-light);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-6);
+    margin-bottom: var(--spacing-8);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--gray-200);
+  }
+  
+  .search-box {
+    margin-bottom: var(--spacing-4);
+  }
+  
+  .search-input {
+    width: 100%;
+    padding: var(--spacing-4);
+    border: 2px solid var(--gray-300);
+    border-radius: var(--border-radius);
+    font-size: var(--font-size-base);
+    transition: all var(--transition-fast);
+    background: white;
+  }
+  
+  .search-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(26, 54, 93, 0.1);
+  }
+  
+  .search-input::placeholder {
+    color: var(--gray-500);
+    font-style: italic;
+  }
+  
+  .filter-controls {
+    display: flex;
+    gap: var(--spacing-4);
+    flex-wrap: wrap;
+  }
+  
+  .filter-select {
+    flex: 1;
+    min-width: 200px;
+    padding: var(--spacing-3) var(--spacing-4);
+    border: 2px solid var(--gray-300);
+    border-radius: var(--border-radius);
+    background: white;
+    font-size: var(--font-size-base);
+    transition: border-color var(--transition-fast);
+  }
+  
+  .filter-select:focus {
+    border-color: var(--primary);
+    outline: none;
+  }
+  
+  /* ================================
+     GRID DE COMPRAS
+     ================================ */
   .purchases-grid {
-    grid-template-columns: 1fr;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: var(--spacing-6);
+    margin-bottom: var(--spacing-8);
   }
   
+  .purchase-card {
+    background: var(--secondary-light);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-6);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--gray-200);
+    transition: all var(--transition-normal);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .purchase-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: var(--gray-300);
+    transition: background var(--transition-fast);
+  }
+  
+  .purchase-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-xl);
+  }
+  
+  .purchase-card:hover::before {
+    background: linear-gradient(90deg, var(--primary) 0%, var(--primary-light) 100%);
+  }
+  
+  /* ================================
+     HEADER DE TARJETA DE COMPRA
+     ================================ */
+  .purchase-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-5);
+    padding-bottom: var(--spacing-4);
+    border-bottom: 2px solid var(--gray-200);
+  }
+  
+  .purchase-symbol {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-3);
+  }
+  
+  .purchase-symbol .symbol {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    color: white;
+    padding: var(--spacing-2) var(--spacing-4);
+    border-radius: var(--border-radius);
+    font-size: var(--font-size-lg);
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .performance-indicator {
+    padding: var(--spacing-1) var(--spacing-3);
+    border-radius: var(--border-radius-full);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    text-align: center;
+    min-width: 60px;
+  }
+  
+  .performance-indicator.positive {
+    background: rgba(72, 187, 120, 0.1);
+    color: var(--success-dark);
+    border: 2px solid var(--success-light);
+  }
+  
+  .performance-indicator.negative {
+    background: rgba(229, 62, 62, 0.1);
+    color: var(--error-dark);
+    border: 2px solid var(--error-light);
+  }
+  
+  .purchase-date {
+    font-size: var(--font-size-sm);
+    color: var(--gray-600);
+    font-weight: 500;
+  }
+  
+  /* ================================
+     DETALLES DE COMPRA
+     ================================ */
+  .purchase-details {
+    margin-bottom: var(--spacing-6);
+  }
+  
+  .detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-3) 0;
+    border-bottom: 1px solid var(--gray-200);
+  }
+  
+  .detail-row:last-child {
+    border-bottom: none;
+  }
+  
+  .detail-row.highlight {
+    background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-100) 100%);
+    padding: var(--spacing-4);
+    border-radius: var(--border-radius);
+    border: 2px solid var(--gray-300);
+    margin-top: var(--spacing-3);
+    font-weight: 600;
+  }
+  
+  .detail-row .label {
+    color: var(--gray-700);
+    font-size: var(--font-size-base);
+    font-weight: 500;
+  }
+  
+  .detail-row .value {
+    font-weight: 600;
+    color: var(--text-dark);
+    font-size: var(--font-size-base);
+    text-align: right;
+  }
+  
+  .detail-row .value.positive {
+    color: var(--success);
+  }
+  
+  .detail-row .value.negative {
+    color: var(--error);
+  }
+  
+  /* ================================
+     ACCIONES DE COMPRA
+     ================================ */
+  .purchase-actions {
+    display: flex;
+    gap: var(--spacing-3);
+    flex-wrap: wrap;
+  }
+  
+  .purchase-actions .btn {
+    flex: 1;
+    min-width: 150px;
+    justify-content: center;
+  }
+  
+  /* ================================
+     PÁGINA DE DETALLE DE COMPRA
+     ================================ */
+  .purchase-detail-container {
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+  
+  .estimation-card {
+    background: var(--secondary-light);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-8);
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--gray-200);
+    margin-bottom: var(--spacing-6);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .estimation-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary) 0%, var(--success) 100%);
+  }
+  
+  .estimation-card .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-6);
+    padding-bottom: var(--spacing-4);
+    border-bottom: 2px solid var(--gray-200);
+  }
+  
+  .estimation-card h3 {
+    margin: 0;
+    color: var(--primary-dark);
+    font-size: var(--font-size-2xl);
+  }
+  
+  .purchase-date, .estimation-timeframe {
+    font-size: var(--font-size-sm);
+    color: var(--gray-600);
+    font-weight: 500;
+    background: var(--gray-100);
+    padding: var(--spacing-2) var(--spacing-3);
+    border-radius: var(--border-radius);
+  }
+  
+  /* ================================
+     RESUMEN DE COMPRA
+     ================================ */
+  .purchase-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-4);
+    margin-bottom: var(--spacing-6);
+  }
+  
+  .summary-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--gray-50);
+    padding: var(--spacing-4);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--gray-200);
+  }
+  
+  .summary-item .label {
+    color: var(--gray-700);
+    font-weight: 500;
+  }
+  
+  .summary-item .value {
+    font-weight: 700;
+    color: var(--primary-dark);
+  }
+  
+  /* ================================
+     GRID DE RENDIMIENTO
+     ================================ */
+  .performance-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-4);
+    margin-bottom: var(--spacing-6);
+  }
+  
+  .performance-item {
+    text-align: center;
+    padding: var(--spacing-4);
+    background: var(--gray-50);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--gray-200);
+  }
+  
+  .performance-item .label {
+    display: block;
+    font-size: var(--font-size-sm);
+    color: var(--gray-600);
+    margin-bottom: var(--spacing-2);
+    font-weight: 500;
+  }
+  
+  .performance-item .value {
+    display: block;
+    font-size: var(--font-size-xl);
+    font-weight: 700;
+    color: var(--primary-dark);
+  }
+  
+  /* ================================
+     GRID DE ESTIMACIÓN
+     ================================ */
   .estimation-grid {
-    grid-template-columns: 1fr;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--spacing-6);
+    margin-bottom: var(--spacing-6);
   }
   
+  .estimation-item {
+    text-align: center;
+    padding: var(--spacing-6);
+    background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-100) 100%);
+    border-radius: var(--border-radius-lg);
+    border: 2px solid var(--gray-200);
+    transition: all var(--transition-normal);
+  }
+  
+  .estimation-item:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+  
+  .estimation-item .label {
+    display: block;
+    font-size: var(--font-size-sm);
+    color: var(--gray-600);
+    margin-bottom: var(--spacing-3);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  
+  .estimation-item .value {
+    display: block;
+    font-size: var(--font-size-2xl);
+    font-weight: 700;
+    color: var(--primary-dark);
+    margin-bottom: var(--spacing-2);
+  }
+  
+  .confidence {
+    padding: var(--spacing-2) var(--spacing-4);
+    border-radius: var(--border-radius-full);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  
+  .confidence-low {
+    background: rgba(229, 62, 62, 0.1);
+    color: var(--error-dark);
+    border: 2px solid var(--error-light);
+  }
+  
+  .confidence-medium {
+    background: rgba(237, 137, 54, 0.1);
+    color: var(--warning-dark);
+    border: 2px solid var(--warning-light);
+  }
+  
+  .confidence-high {
+    background: rgba(72, 187, 120, 0.1);
+    color: var(--success-dark);
+    border: 2px solid var(--success-light);
+  }
+  
+  /* ================================
+     DISCLAIMER DE ESTIMACIÓN
+     ================================ */
+  .estimation-disclaimer {
+    background: rgba(237, 137, 54, 0.1);
+    border: 2px solid var(--warning-light);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-4);
+    margin-top: var(--spacing-6);
+  }
+  
+  .estimation-disclaimer p {
+    margin: 0;
+    color: var(--warning-dark);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    text-align: center;
+  }
+  
+  /* ================================
+     SECCIÓN DE ACCIONES
+     ================================ */
   .actions-section {
-    flex-direction: column;
+    display: flex;
+    gap: var(--spacing-4);
+    justify-content: center;
+    align-items: center;
+    margin-top: var(--spacing-8);
+    padding-top: var(--spacing-6);
+    border-top: 2px solid var(--gray-200);
+    flex-wrap: wrap;
   }
   
-  .value-large {
-    font-size: 2rem;
+  .actions-section .btn {
+    min-width: 150px;
   }
-}
+  
+  /* ================================
+     ESTADO SIN RESULTADOS
+     ================================ */
+  .no-results {
+    text-align: center;
+    padding: var(--spacing-12) var(--spacing-6);
+    background: var(--secondary-light);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-sm);
+    border: 2px dashed var(--gray-300);
+  }
+  
+  .no-results h3 {
+    color: var(--gray-600);
+    margin-bottom: var(--spacing-4);
+  }
+  
+  .no-results p {
+    color: var(--gray-500);
+    font-size: var(--font-size-lg);
+    margin: 0;
+  }
+  
+  /* ================================
+     RESPONSIVE PARA COMPRAS
+     ================================ */
+  @media (max-width: 1024px) {
+    .purchases-grid {
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    }
+    
+    .estimation-grid {
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+    
+    .filter-controls {
+      flex-direction: column;
+    }
+    
+    .filter-select {
+      min-width: auto;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .stats-overview {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .purchases-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .purchase-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--spacing-3);
+    }
+    
+    .purchase-symbol {
+      width: 100%;
+      justify-content: space-between;
+    }
+    
+    .purchase-actions {
+      flex-direction: column;
+    }
+    
+    .purchase-actions .btn {
+      width: 100%;
+    }
+    
+    .performance-grid,
+    .estimation-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .actions-section {
+      flex-direction: column;
+    }
+    
+    .actions-section .btn {
+      width: 100%;
+    }
+    
+    .controls-section {
+      padding: var(--spacing-4);
+    }
+  }
+  
+  @media (max-width: 640px) {
+    .stats-overview {
+      grid-template-columns: 1fr;
+    }
+    
+    .stat-card {
+      padding: var(--spacing-4);
+    }
+    
+    .stat-value {
+      font-size: var(--font-size-xl);
+    }
+    
+    .purchase-card {
+      padding: var(--spacing-4);
+    }
+    
+    .estimation-card {
+      padding: var(--spacing-6);
+    }
+    
+    .summary-item {
+      flex-direction: column;
+      text-align: center;
+      gap: var(--spacing-2);
+    }
+    
+    .estimation-item {
+      padding: var(--spacing-4);
+    }
+    
+    .estimation-item .value {
+      font-size: var(--font-size-xl);
+    }
+  }
