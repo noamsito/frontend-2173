@@ -1,5 +1,5 @@
 import axios from "axios";
-import { getAuth0Client } from "../auth0-config.jsx"; // Cambia .js por .jsx
+import { getAuth0Client } from "../auth0-config"; // Cambia .js por .jsx
 
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
