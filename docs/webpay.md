@@ -15,7 +15,6 @@ TRANSBANK_RETURN_URL=http://localhost:3000/webpay/return
 TRANSBANK_FINAL_URL=http://localhost:80/payment/result
 ```
 
-
 ## 2. Archivos agregados
 
 Se agregaron los siguientes archivos:
@@ -57,13 +56,9 @@ Se va a pedir una tarjeta para comprar por webpay. Se puede usar cualquiera de l
 
 Luego ek usuario será redirigido a una pagina en donde se pedirá rut y contraseña.
 Las credenciales para la integración son:
-rut: 11.111.111-1 (puede ser sin puntos o guión)
+
+rut: 11.111.111-1 (puede ser sin puntos ni guión)
+
 contraseña: 123
 
 
-## Consideraciones adicionales
-
-### N. Problema con stats
-
-Al comprar una stock y realizar todo el proceso de transacción a traves de webpay, la compra se borraba una vez el usuario volvía a la app.
-Como solución temporal, cree el endpoint GET /stats, pero queda pendiente para revisión más tarde.
