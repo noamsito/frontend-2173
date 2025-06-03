@@ -1,6 +1,5 @@
 import axios from "axios";
-import { getAuth0Client } from "../auth0-config"; // Cambia .js por .jsx
-
+import { getAuth0Client } from "../auth0-config";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
@@ -22,9 +21,6 @@ const getAuthHeaders = async () => {
 };
 
 // API de Stocks
-
-// Modificar la función getStocks para aceptar filtros
-
 export const getStocks = async (params = {}) => {
   try {
     const headers = await getAuthHeaders();
@@ -77,9 +73,10 @@ export const buyStock = async (symbol, quantity) => {
       { symbol, quantity },
       { headers }
     );
-    // Agregado de webpay
+    
     const data = response.data;
-    console.log("Respuesta del backend:", data); // DEBUG
+    console.log("Respuesta del backend:", data);
+    
     // Si hay datos de Webpay, redirigir a la URL de pago
     if (data.webpay && data.webpay.url && data.webpay.token) {
       return {
@@ -96,7 +93,7 @@ export const buyStock = async (symbol, quantity) => {
   }
 };
 
-// API de Usuario y Wallet
+// API de Usuario
 export const getUserProfile = async () => {
   try {
     const headers = await getAuthHeaders();
@@ -104,32 +101,6 @@ export const getUserProfile = async () => {
     return response.data;
   } catch (err) {
     console.error("Error al obtener perfil de usuario:", err);
-    throw err;
-  }
-};
-
-export const getWalletBalance = async () => {
-  try {
-    const headers = await getAuthHeaders();
-    const response = await axios.get(`${API_URL}/wallet/balance`, { headers });
-    return response.data;
-  } catch (err) {
-    console.error("Error al obtener saldo de la billetera:", err);
-    throw err;
-  }
-};
-
-export const depositToWallet = async (amount) => {
-  try {
-    const headers = await getAuthHeaders();
-    const response = await axios.post(
-      `${API_URL}/wallet/deposit`,
-      { amount },
-      { headers }
-    );
-    return response.data;
-  } catch (err) {
-    console.error("Error al depositar en la billetera:", err);
     throw err;
   }
 };
@@ -148,33 +119,33 @@ export const getUserPurchases = async () => {
 
 // API de Eventos
 export const getEvents = async (page = 1, count = 25, type = 'ALL') => {
-    try {
-      const headers = await getAuthHeaders();
-      const response = await axios.get(
-        `${API_URL}/events?page=${page}&count=${count}&type=${type}`,
-        { headers }
-      );
-      
-      // Procesar las fechas y asegurar que details sea un objeto
-      const events = response.data.data.map(event => {
-        // Si details es un string, convertirlo a objeto
-        if (typeof event.details === 'string') {
-          try {
-            event.details = JSON.parse(event.details);
-          } catch (e) {
-            console.error("Error al parsear detalles del evento:", e);
-          }
+  try {
+    const headers = await getAuthHeaders();
+    const response = await axios.get(
+      `${API_URL}/events?page=${page}&count=${count}&type=${type}`,
+      { headers }
+    );
+    
+    // Procesar las fechas y asegurar que details sea un objeto
+    const events = response.data.data.map(event => {
+      // Si details es un string, convertirlo a objeto
+      if (typeof event.details === 'string') {
+        try {
+          event.details = JSON.parse(event.details);
+        } catch (e) {
+          console.error("Error al parsear detalles del evento:", e);
         }
-        
-        return {
-          ...event,
-          formatted_date: new Date(event.created_at).toLocaleString()
-        };
-      });
+      }
       
-      return { data: events };
-    } catch (err) {
-      console.error("Error al obtener eventos:", err);
-      throw err;
-    }
-  };
+      return {
+        ...event,
+        formatted_date: new Date(event.created_at).toLocaleString()
+      };
+    });
+    
+    return { data: events };
+  } catch (err) {
+    console.error("Error al obtener eventos:", err);
+    throw err;
+  }
+};

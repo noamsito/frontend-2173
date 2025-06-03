@@ -1,57 +1,100 @@
-.event-log-container {
+/* ================================
+   ESTILOS PARA MÓDULO DE EVENT LOG
+   ================================ */
+
+/* ================================
+   CONTENEDOR PRINCIPAL
+   ================================ */
+   .event-log-container {
+    max-width: 1200px;
+    margin: 0 auto;
     background-color: white;
-    border-radius: var(--border-radius);
-    padding: 2rem;
-    box-shadow: var(--box-shadow);
-    margin-bottom: 2rem;
-  }
-  
-  .event-filters {
-    margin-bottom: 1.5rem;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    background-color: var(--secondary-light);
-    padding: 1rem;
-    border-radius: var(--border-radius);
-  }
-  
-  .event-filters label {
-    font-weight: 500;
-    margin-bottom: 0;
-    display: flex;
-    align-items: center;
-  }
-  
-  .event-filters select {
-    margin-left: 0.5rem;
-    width: auto;
-    padding: 0.5rem;
-    border: 1px solid var(--gray-light);
-    border-radius: var(--border-radius);
-    background-color: white;
-  }
-  
-  .events-list {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-  }
-  
-  .event-item {
-    display: flex;
-    background-color: var(--secondary-light);
-    border-radius: var(--border-radius);
-    padding: 1.2rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-8);
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--gray-200);
     position: relative;
     overflow: hidden;
   }
   
-  .event-item:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+  .event-log-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary) 0%, var(--success) 100%);
+  }
+  
+  /* ================================
+     FILTROS DE EVENTOS
+     ================================ */
+  .event-filters {
+    margin-bottom: var(--spacing-6);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-4);
+    background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-100) 100%);
+    padding: var(--spacing-5);
+    border-radius: var(--border-radius-lg);
+    border: 1px solid var(--gray-200);
+    box-shadow: var(--shadow-sm);
+    flex-wrap: wrap;
+  }
+  
+  .event-filters label {
+    font-weight: 500;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    color: var(--gray-700);
+    font-size: var(--font-size-base);
+    gap: var(--spacing-3);
+  }
+  
+  .event-filters select {
+    width: auto;
+    min-width: 200px;
+    padding: var(--spacing-3) var(--spacing-4);
+    border: 2px solid var(--gray-300);
+    border-radius: var(--border-radius);
+    background-color: white;
+    font-size: var(--font-size-base);
+    transition: all var(--transition-fast);
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .event-filters select:focus {
+    border-color: var(--primary);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(26, 54, 93, 0.1);
+  }
+  
+  .event-filters select:hover {
+    border-color: var(--primary-light);
+  }
+  
+  /* ================================
+     LISTA DE EVENTOS
+     ================================ */
+  .events-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-4);
+    margin-bottom: var(--spacing-6);
+  }
+  
+  .event-item {
+    display: flex;
+    background: linear-gradient(135deg, var(--gray-50) 0%, var(--secondary-light) 100%);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-5);
+    box-shadow: var(--shadow-sm);
+    transition: all var(--transition-normal);
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--gray-200);
   }
   
   .event-item::before {
@@ -61,110 +104,395 @@
     top: 0;
     bottom: 0;
     width: 4px;
+    transition: background var(--transition-fast);
   }
   
-  /* Evento tipo IPO */
-  .event-item:has(.event-icon:contains('🚀'))::before {
-    background-color: var(--success);
+  .event-item:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
   }
   
-  /* Evento tipo EMIT */
-  .event-item:has(.event-icon:contains('📈'))::before {
-    background-color: var(--primary);
+  .event-item:hover::before {
+    width: 6px;
   }
   
-  /* Evento tipo PURCHASE_VALIDATION */
-  .event-item:has(.event-icon:contains('✅'))::before {
-    background-color: var(--success);
-  }
-  
-  /* Evento tipo EXTERNAL_PURCHASE */
-  .event-item:has(.event-icon:contains('🌐'))::before {
-    background-color: var(--warning);
-  }
-  
-  .event-icon {
-    font-size: 2rem;
-    margin-right: 1rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 40px;
-  }
-  
-  .event-content {
-    flex: 1;
-  }
-  
-  .event-time {
-    font-size: 0.85rem;
-    color: var(--gray-dark);
-    margin-bottom: 0.5rem;
-  }
-  
-  .event-message {
-    font-size: 1rem;
-    line-height: 1.5;
-    color: var(--text-dark);
-  }
-  
-  .pagination {
-    margin-top: 2rem;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 1rem;
-  }
-  
-  .pagination button {
-    padding: 0.5rem 1rem;
-    background-color: var(--primary);
-    color: white;
-    border: none;
-    border-radius: var(--border-radius);
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-  }
-  
-  .pagination button:hover {
-    background-color: var(--primary-dark);
-  }
-  
-  .pagination button:disabled {
-    background-color: var(--gray);
-    cursor: not-allowed;
-  }
-  
-  /* Fix para el selector de eventos en CSS */
+  /* Colores específicos por tipo de evento */
   .event-item[data-type="IPO"]::before {
-    background-color: var(--success);
+    background: linear-gradient(to bottom, var(--success) 0%, var(--success-dark) 100%);
   }
   
   .event-item[data-type="EMIT"]::before {
-    background-color: var(--primary);
+    background: linear-gradient(to bottom, var(--primary) 0%, var(--primary-dark) 100%);
   }
   
   .event-item[data-type="PURCHASE_VALIDATION"]::before {
-    background-color: var(--success);
+    background: linear-gradient(to bottom, var(--success) 0%, var(--success-light) 100%);
   }
   
   .event-item[data-type="EXTERNAL_PURCHASE"]::before {
-    background-color: var(--warning);
+    background: linear-gradient(to bottom, var(--warning) 0%, var(--warning-dark) 100%);
   }
   
-  /* Responsive */
+  /* ================================
+     ÍCONO DEL EVENTO
+     ================================ */
+  .event-icon {
+    font-size: var(--font-size-3xl);
+    margin-right: var(--spacing-5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, var(--gray-100) 0%, var(--gray-200) 100%);
+    border-radius: var(--border-radius-full);
+    box-shadow: var(--shadow-sm);
+    transition: all var(--transition-normal);
+    border: 2px solid var(--gray-300);
+  }
+  
+  .event-item:hover .event-icon {
+    transform: scale(1.1);
+    box-shadow: var(--shadow-md);
+  }
+  
+  /* Estilos específicos para íconos por tipo */
+  .event-item[data-type="IPO"] .event-icon {
+    background: linear-gradient(135deg, rgba(72, 187, 120, 0.1) 0%, rgba(72, 187, 120, 0.2) 100%);
+    border-color: var(--success-light);
+  }
+  
+  .event-item[data-type="EMIT"] .event-icon {
+    background: linear-gradient(135deg, rgba(26, 54, 93, 0.1) 0%, rgba(26, 54, 93, 0.2) 100%);
+    border-color: var(--primary-light);
+  }
+  
+  .event-item[data-type="PURCHASE_VALIDATION"] .event-icon {
+    background: linear-gradient(135deg, rgba(72, 187, 120, 0.1) 0%, rgba(72, 187, 120, 0.2) 100%);
+    border-color: var(--success-light);
+  }
+  
+  .event-item[data-type="EXTERNAL_PURCHASE"] .event-icon {
+    background: linear-gradient(135deg, rgba(237, 137, 54, 0.1) 0%, rgba(237, 137, 54, 0.2) 100%);
+    border-color: var(--warning-light);
+  }
+  
+  /* ================================
+     CONTENIDO DEL EVENTO
+     ================================ */
+  .event-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  
+  .event-time {
+    font-size: var(--font-size-sm);
+    color: var(--gray-600);
+    margin-bottom: var(--spacing-2);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: var(--gray-100);
+    padding: var(--spacing-1) var(--spacing-3);
+    border-radius: var(--border-radius-full);
+    display: inline-block;
+    width: fit-content;
+  }
+  
+  .event-message {
+    font-size: var(--font-size-base);
+    line-height: 1.6;
+    color: var(--text-dark);
+    font-weight: 500;
+    margin: 0;
+  }
+  
+  .event-message strong {
+    color: var(--primary-dark);
+    font-weight: 700;
+  }
+  
+  /* ================================
+     BADGES Y ETIQUETAS DE ESTADO
+     ================================ */
+  .event-badge {
+    display: inline-block;
+    padding: var(--spacing-1) var(--spacing-3);
+    border-radius: var(--border-radius-full);
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-left: var(--spacing-2);
+  }
+  
+  .event-badge.success {
+    background: rgba(72, 187, 120, 0.1);
+    color: var(--success-dark);
+    border: 1px solid var(--success-light);
+  }
+  
+  .event-badge.warning {
+    background: rgba(237, 137, 54, 0.1);
+    color: var(--warning-dark);
+    border: 1px solid var(--warning-light);
+  }
+  
+  .event-badge.info {
+    background: rgba(26, 54, 93, 0.1);
+    color: var(--primary-dark);
+    border: 1px solid var(--primary-light);
+  }
+  
+  /* ================================
+     PAGINACIÓN DE EVENTOS
+     ================================ */
+  .pagination {
+    margin-top: var(--spacing-8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: var(--spacing-4);
+    padding: var(--spacing-5);
+    background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-100) 100%);
+    border-radius: var(--border-radius-lg);
+    border: 1px solid var(--gray-200);
+  }
+  
+  .pagination .btn {
+    min-width: 120px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: var(--spacing-3) var(--spacing-5);
+    border-radius: var(--border-radius);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .pagination .btn:hover:not(:disabled) {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+  }
+  
+  .pagination .btn:disabled {
+    background: var(--gray-400);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+  
+  .pagination span {
+    font-weight: 600;
+    color: var(--primary-dark);
+    font-size: var(--font-size-base);
+    padding: 0 var(--spacing-3);
+    background: white;
+    border-radius: var(--border-radius);
+    padding: var(--spacing-2) var(--spacing-4);
+    border: 1px solid var(--gray-300);
+  }
+  
+  /* ================================
+     ESTADO SIN EVENTOS
+     ================================ */
+  .no-events {
+    text-align: center;
+    padding: var(--spacing-12) var(--spacing-6);
+    background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-100) 100%);
+    border-radius: var(--border-radius-lg);
+    border: 2px dashed var(--gray-300);
+    margin: var(--spacing-6) 0;
+  }
+  
+  .no-events h3 {
+    color: var(--gray-600);
+    margin-bottom: var(--spacing-4);
+    font-size: var(--font-size-xl);
+  }
+  
+  .no-events p {
+    color: var(--gray-500);
+    font-size: var(--font-size-lg);
+    margin: 0;
+  }
+  
+  .no-events::before {
+    content: '📝';
+    display: block;
+    font-size: var(--font-size-4xl);
+    margin-bottom: var(--spacing-4);
+    opacity: 0.5;
+  }
+  
+  /* ================================
+     RESPONSIVE PARA EVENT LOG
+     ================================ */
   @media (max-width: 768px) {
+    .event-log-container {
+      padding: var(--spacing-6);
+    }
+    
     .event-filters {
       flex-direction: column;
-      align-items: flex-start;
+      align-items: stretch;
+      padding: var(--spacing-4);
+    }
+    
+    .event-filters label {
+      justify-content: center;
+      margin-bottom: var(--spacing-2);
+    }
+    
+    .event-filters select {
+      width: 100%;
+      min-width: auto;
     }
     
     .event-item {
       flex-direction: column;
+      padding: var(--spacing-4);
     }
     
     .event-icon {
-      margin-bottom: 0.5rem;
-      font-size: 1.5rem;
+      margin-right: 0;
+      margin-bottom: var(--spacing-3);
+      align-self: center;
+      min-width: 50px;
+      height: 50px;
+      font-size: var(--font-size-2xl);
     }
+    
+    .event-content {
+      text-align: center;
+    }
+    
+    .event-time {
+      align-self: center;
+    }
+    
+    .pagination {
+      flex-direction: column;
+      gap: var(--spacing-3);
+      padding: var(--spacing-4);
+    }
+    
+    .pagination .btn {
+      width: 100%;
+      max-width: 200px;
+    }
+  }
+  
+  @media (max-width: 640px) {
+    .event-log-container {
+      padding: var(--spacing-4);
+    }
+    
+    .event-item {
+      padding: var(--spacing-3);
+    }
+    
+    .event-icon {
+      min-width: 40px;
+      height: 40px;
+      font-size: var(--font-size-xl);
+    }
+    
+    .event-message {
+      font-size: var(--font-size-sm);
+    }
+    
+    .event-time {
+      font-size: var(--font-size-xs);
+    }
+    
+    .no-events {
+      padding: var(--spacing-8) var(--spacing-4);
+    }
+    
+    .no-events h3 {
+      font-size: var(--font-size-lg);
+    }
+    
+    .no-events p {
+      font-size: var(--font-size-base);
+    }
+    
+    .pagination span {
+      padding: var(--spacing-2) var(--spacing-3);
+      font-size: var(--font-size-sm);
+    }
+  }
+  
+  /* ================================
+     ANIMACIONES ESPECIALES
+     ================================ */
+  @keyframes eventAppear {
+    from {
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  
+  .event-item {
+    animation: eventAppear 0.4s ease-out;
+  }
+  
+  .event-item:nth-child(even) {
+    animation-delay: 0.1s;
+  }
+  
+  .event-item:nth-child(odd) {
+    animation-delay: 0.2s;
+  }
+  
+  /* ================================
+     MEJORAS DE ACCESIBILIDAD
+     ================================ */
+  .event-item:focus-within {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+  
+  .event-filters select:focus {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+  
+  /* ================================
+     INDICADORES DE CARGA
+     ================================ */
+  .events-loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: var(--spacing-12);
+    background: var(--gray-50);
+    border-radius: var(--border-radius-lg);
+    margin: var(--spacing-6) 0;
+  }
+  
+  .events-loading::before {
+    content: '';
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--gray-300);
+    border-top: 3px solid var(--primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-right: var(--spacing-3);
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
   }
