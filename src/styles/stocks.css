@@ -1,33 +1,544 @@
-/* Purchase Message Styles - SOLO MANTENER ESTO */
-.purchase-message {
-    padding: 12px 20px;
-    margin: 15px 0;
-    border-radius: 8px;
-    font-weight: 500;
+/* ================================
+   PÁGINA DE STOCKS
+   ================================ */
+
+   .stocks-container {
+    background: var(--secondary-light);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-8);
+    box-shadow: var(--shadow-md);
+    margin-bottom: var(--spacing-6);
+  }
+  
+  .stocks-container h2 {
+    color: var(--primary-dark);
+    margin-bottom: var(--spacing-6);
+    font-size: var(--font-size-3xl);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-3);
+  }
+  
+  /* ================================
+     BILLETERA SECTION
+     ================================ */
+  .wallet-section {
+    background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-100) 100%);
+    padding: var(--spacing-5);
+    border-radius: var(--border-radius-lg);
+    margin: var(--spacing-6) 0;
+    border: 2px solid var(--gray-200);
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .wallet-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--spacing-4);
+  }
+  
+  .wallet-details h3 {
+    margin: 0 0 var(--spacing-2) 0;
+    color: var(--gray-700);
+    font-size: var(--font-size-lg);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+  }
+  
+  .wallet-balance {
+    margin: 0;
+    font-size: var(--font-size-2xl);
+    font-weight: 700;
+    color: var(--success);
+    background: linear-gradient(135deg, var(--success) 0%, var(--success-dark) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  /* ================================
+     MENSAJES DE COMPRA
+     ================================ */
+  .purchase-message {
+    padding: var(--spacing-4) var(--spacing-5);
+    margin: var(--spacing-4) 0;
+    border-radius: var(--border-radius);
+    font-weight: 600;
     text-align: center;
     animation: slideIn 0.3s ease-out;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-.purchase-message.success {
-    background-color: #d4edda;
-    color: #155724;
-    border: 2px solid #c3e6cb;
-}
-
-.purchase-message.error {
-    background-color: #f8d7da;
-    color: #721c24;
-    border: 2px solid #f5c6cb;
-}
-
-@keyframes slideIn {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
+    box-shadow: var(--shadow-sm);
+    border-left: 4px solid;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-2);
+  }
+  
+  .purchase-message.success {
+    background: linear-gradient(135deg, rgba(72, 187, 120, 0.1) 0%, rgba(72, 187, 120, 0.05) 100%);
+    color: var(--success-dark);
+    border-color: var(--success);
+  }
+  
+  .purchase-message.error {
+    background: linear-gradient(135deg, rgba(229, 62, 62, 0.1) 0%, rgba(229, 62, 62, 0.05) 100%);
+    color: var(--error-dark);
+    border-color: var(--error);
+  }
+  
+  /* ================================
+     FILTROS SECTION
+     ================================ */
+  .filters-section {
+    background: var(--gray-50);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-5);
+    margin-bottom: var(--spacing-6);
+    border: 1px solid var(--gray-200);
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .filters-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-4);
+    flex-wrap: wrap;
+    gap: var(--spacing-4);
+  }
+  
+  .count-filter {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-3);
+  }
+  
+  .count-filter label {
+    font-weight: 500;
+    color: var(--gray-700);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+  }
+  
+  .count-filter select {
+    width: auto;
+    min-width: 80px;
+    padding: var(--spacing-2) var(--spacing-3);
+    border: 2px solid var(--gray-300);
+    border-radius: var(--border-radius);
+    background-color: white;
+  }
+  
+  .toggle-filters-button {
+    background: var(--primary-light);
+    border: none;
+    padding: var(--spacing-3) var(--spacing-4);
+    border-radius: var(--border-radius);
+    color: white;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+  }
+  
+  .toggle-filters-button:hover {
+    background: var(--primary);
+    transform: translateY(-1px);
+  }
+  
+  .advanced-filters {
+    padding-top: var(--spacing-4);
+    border-top: 1px solid var(--gray-200);
+  }
+  
+  .filters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-4);
+    margin-bottom: var(--spacing-5);
+  }
+  
+  .filter-group {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .filter-group label {
+    font-weight: 500;
+    color: var(--gray-700);
+    margin-bottom: var(--spacing-2);
+    font-size: var(--font-size-sm);
+  }
+  
+  .filter-group input {
+    padding: var(--spacing-3);
+    border: 2px solid var(--gray-300);
+    border-radius: var(--border-radius);
+    font-size: var(--font-size-base);
+    transition: border-color var(--transition-fast);
+  }
+  
+  .filter-group input:focus {
+    border-color: var(--primary);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(26, 54, 93, 0.1);
+  }
+  
+  .filter-actions {
+    display: flex;
+    gap: var(--spacing-3);
+    flex-wrap: wrap;
+  }
+  
+  .apply-filters-button {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: var(--spacing-3) var(--spacing-5);
+    border-radius: var(--border-radius);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+  }
+  
+  .apply-filters-button:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+  }
+  
+  .reset-filters-button {
+    background: var(--gray-500);
+    color: white;
+    border: none;
+    padding: var(--spacing-3) var(--spacing-5);
+    border-radius: var(--border-radius);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+  }
+  
+  .reset-filters-button:hover {
+    background: var(--gray-600);
+    transform: translateY(-1px);
+  }
+  
+  /* ================================
+     TABLA DE STOCKS
+     ================================ */
+  .stocks-list {
+    background: white;
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+    border: 1px solid var(--gray-200);
+  }
+  
+  .stocks-list table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .stocks-list th {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: white;
+    padding: var(--spacing-4);
+    text-align: left;
+    font-weight: 600;
+    font-size: var(--font-size-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  
+  .stocks-list td {
+    padding: var(--spacing-4);
+    border-bottom: 1px solid var(--gray-200);
+    vertical-align: middle;
+  }
+  
+  .stocks-list tr:hover {
+    background-color: var(--gray-50);
+  }
+  
+  .stocks-list tr:last-child td {
+    border-bottom: none;
+  }
+  
+  /* ================================
+     COLUMNA DE COMPRA
+     ================================ */
+  .purchase-cell {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-2);
+    align-items: center;
+    min-width: 120px;
+  }
+  
+  .purchase-button {
+    background: linear-gradient(135deg, var(--success) 0%, var(--success-dark) 100%);
+    color: white;
+    border: none;
+    padding: var(--spacing-2) var(--spacing-3);
+    border-radius: var(--border-radius);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-1);
+    min-width: 80px;
+    justify-content: center;
+    font-size: var(--font-size-sm);
+  }
+  
+  .purchase-button:hover:not(:disabled) {
+    background: linear-gradient(135deg, var(--success-dark) 0%, var(--success) 100%);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+  }
+  
+  .purchase-button:disabled {
+    background: var(--gray-400);
+    cursor: not-allowed;
+    transform: none;
+  }
+  
+  .purchase-button.loading {
+    background: linear-gradient(135deg, var(--warning) 0%, var(--warning-dark) 100%);
+    animation: pulse 1s infinite;
+  }
+  
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+  }
+  
+  .quantity-selector {
+    padding: var(--spacing-1) var(--spacing-2);
+    border: 2px solid var(--gray-300);
+    border-radius: var(--border-radius);
+    font-size: var(--font-size-xs);
+    min-width: 50px;
+    text-align: center;
+    background: white;
+    transition: border-color var(--transition-fast);
+  }
+  
+  .quantity-selector:focus {
+    border-color: var(--primary);
+    outline: none;
+  }
+  
+  .quantity-selector:disabled {
+    background: var(--gray-100);
+    cursor: not-allowed;
+  }
+  
+  .purchase-status {
+    font-size: var(--font-size-xs);
+    font-weight: 500;
+    text-align: center;
+    margin-top: var(--spacing-1);
+  }
+  
+  .purchase-status.no-stock {
+    color: var(--error);
+  }
+  
+  .purchase-status.insufficient-funds {
+    color: var(--warning);
+  }
+  
+  /* ================================
+     BOTONES DE ACCIÓN
+     ================================ */
+  .view-button {
+    background: var(--primary-light);
+    color: white;
+    border: none;
+    padding: var(--spacing-2) var(--spacing-3);
+    border-radius: var(--border-radius);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--font-size-sm);
+  }
+  
+  .view-button:hover {
+    background: var(--primary);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+    text-decoration: none;
+    color: white;
+  }
+  
+  /* ================================
+     PAGINACIÓN
+     ================================ */
+  .pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: var(--spacing-4);
+    margin-top: var(--spacing-6);
+    padding: var(--spacing-4);
+    background: var(--gray-50);
+    border-radius: var(--border-radius);
+  }
+  
+  .pagination button {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: var(--spacing-3) var(--spacing-4);
+    border-radius: var(--border-radius);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+  }
+  
+  .pagination button:hover:not(:disabled) {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+  }
+  
+  .pagination button:disabled {
+    background: var(--gray-400);
+    cursor: not-allowed;
+    transform: none;
+  }
+  
+  .pagination span {
+    font-weight: 600;
+    color: var(--primary-dark);
+    padding: 0 var(--spacing-2);
+  }
+  
+  /* ================================
+     BOTÓN REFRESH
+     ================================ */
+  .refresh-button {
+    background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%);
+    color: white;
+    border: none;
+    padding: var(--spacing-4) var(--spacing-6);
+    border-radius: var(--border-radius);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    margin-top: var(--spacing-6);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    mx-auto;
+    min-height: 48px;
+  }
+  
+  .refresh-button:hover:not(:disabled) {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+  
+  .refresh-button:disabled {
+    background: var(--gray-400);
+    cursor: not-allowed;
+    transform: none;
+  }
+  
+  /* ================================
+     RESPONSIVE PARA STOCKS
+     ================================ */
+  @media (max-width: 1024px) {
+    .filters-grid {
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     }
-    to {
-        opacity: 1;
-        transform: translateY(0);
+    
+    .wallet-info {
+      flex-direction: column;
+      text-align: center;
     }
-}
+  }
+  
+  @media (max-width: 768px) {
+    .stocks-container {
+      padding: var(--spacing-4);
+    }
+    
+    .filters-header {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    
+    .filter-actions {
+      flex-direction: column;
+    }
+    
+    .filter-actions button {
+      width: 100%;
+    }
+    
+    .filters-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .stocks-list {
+      overflow-x: auto;
+    }
+    
+    .stocks-list table {
+      min-width: 600px;
+    }
+    
+    .stocks-list th,
+    .stocks-list td {
+      padding: var(--spacing-3) var(--spacing-2);
+      font-size: var(--font-size-sm);
+    }
+    
+    .purchase-cell {
+      min-width: 100px;
+    }
+    
+    .pagination {
+      flex-direction: column;
+      gap: var(--spacing-2);
+    }
+  }
+  
+  @media (max-width: 640px) {
+    .wallet-section {
+      padding: var(--spacing-4);
+    }
+    
+    .wallet-balance {
+      font-size: var(--font-size-xl);
+    }
+    
+    .purchase-message {
+      padding: var(--spacing-3);
+      font-size: var(--font-size-sm);
+    }
+    
+    .stocks-list table {
+      min-width: 500px;
+    }
+    
+    .purchase-cell {
+      min-width: 80px;
+    }
+    
+    .purchase-button,
+    .view-button {
+      padding: var(--spacing-1) var(--spacing-2);
+      font-size: var(--font-size-xs);
+    }
+  }

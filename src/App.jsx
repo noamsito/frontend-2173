@@ -2,29 +2,29 @@ import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-ro
 import { useAuth0 } from '@auth0/auth0-react';
 import { LoginButton, LogoutButton, Profile } from './components/AuthComponents';
 import Navigation from './components/Navigation';
-import SystemStatus from './components/SystemStatus'; // ← AGREGAR ESTA LÍNEA
+import SystemStatus from './components/SystemStatus';
 import TestStocks from './testStocks';
 import MyPurchases from './pages/MyPurchases';
 import PurchaseDetail from './pages/PurchaseDetail';
-import Wallet from './pages/Wallet';
 import StockDetail from './pages/StockDetail';
 import EventLog from './pages/EventLog';
+import './styles/SystemStatus.css';
+import './styles/EventLog.css';
+import './styles/stock-detail.css';
 
 import './App.css';
 import './styles/purchases.css';
-
-import './styles/SystemStatus.css'; // Cambia aquí la ruta correcta
-
+import './styles/SystemStatus.css';
 
 function App() {
   const { isLoading, error, isAuthenticated, user } = useAuth0();
 
   if (error) {
-    return <div>¡Ups! Un error: {error.message}</div>;
+    return <div className="error-container">¡Ups! Un error: {error.message}</div>;
   }
 
   if (isLoading) {
-    return <div>Cargando...</div>;
+    return <div className="loading-container">Cargando...</div>;
   }
 
   return (
@@ -41,7 +41,6 @@ function App() {
               </div>
             </header>
             
-            {/* AGREGAR EL SISTEMA DE HEARTBEAT AQUÍ */}
             <SystemStatus />
             
             <main>
@@ -51,7 +50,6 @@ function App() {
                 <Route path="/stocks/:symbol" element={<StockDetail />} />
                 <Route path="/my-purchases" element={<MyPurchases />} />
                 <Route path="/purchases/:id" element={<PurchaseDetail />} />
-                <Route path="/wallet" element={<Wallet />} />
                 <Route path="/event-log" element={<EventLog />} />
               </Routes>
             </main>
@@ -64,7 +62,7 @@ function App() {
                 <p>La plataforma más sofisticada para el seguimiento y compra de acciones en tiempo real</p>
                 <ul className="feature-list">
                   <li>Seguimiento de acciones IPO y EMIT</li>
-                  <li>Gestión de compras y billetera</li>
+                  <li>Gestión de compras inteligente</li>
                   <li>Registro de eventos del mercado</li>
                   <li>Interfaz intuitiva y profesional</li>
                 </ul>
