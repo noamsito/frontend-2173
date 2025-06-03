@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getStocks } from "./api/apiService";
+import "./styles/stocks.css"; // ← AGREGAR ESTA LÍNEA
 
 export default function TestStocks() {
     const [stocks, setStocks] = useState([]);
@@ -8,6 +9,10 @@ export default function TestStocks() {
     const [error, setError] = useState('');
     const [page, setPage] = useState(1);
     const [count, setCount] = useState(25);
+    
+    // Estados para compras
+    const [purchaseLoading, setPurchaseLoading] = useState({});
+    const [purchaseMessage, setPurchaseMessage] = useState('');
     
     // Nuevos estados para filtros
     const [filters, setFilters] = useState({
@@ -21,8 +26,13 @@ export default function TestStocks() {
     });
     const [showFilters, setShowFilters] = useState(false);
 
+    // Estados para cantidades seleccionadas
+    const [selectedQuantities, setSelectedQuantities] = useState({});
+    const [userBalance, setUserBalance] = useState(0);
+
     useEffect(() => {
         fetchStocks();
+        fetchUserBalance();
     }, [page, count]);
 
     const fetchStocks = async (applyFilters = false) => {
@@ -61,6 +71,87 @@ export default function TestStocks() {
         }
     };
 
+    // FUNCIÓN: Obtener saldo del usuario
+    const fetchUserBalance = async () => {
+        try {
+            const response = await fetch('http://localhost:3000/api/users/1/balance');
+            if (response.ok) {
+                const data = await response.json();
+                setUserBalance(data.balance || 0);
+            }
+        } catch (error) {
+            console.error('Error al obtener saldo:', error);
+        }
+    };
+
+    // NUEVA FUNCIÓN: Manejar compras
+    const handlePurchase = async (stock) => {
+        const quantity = selectedQuantities[stock.symbol] || 1;
+        const totalCost = stock.price * quantity;
+        
+        // Validaciones
+        if (quantity > stock.quantity) {
+            setPurchaseMessage(`❌ Solo hay ${stock.quantity} acciones disponibles de ${stock.symbol}`);
+            setTimeout(() => setPurchaseMessage(''), 5000);
+            return;
+        }
+
+        if (userBalance < totalCost) {
+            setPurchaseMessage(`❌ Saldo insuficiente. Necesitas $${totalCost.toLocaleString()} pero tienes $${userBalance.toLocaleString()}`);
+            setTimeout(() => setPurchaseMessage(''), 5000);
+            return;
+        }
+
+        setPurchaseLoading(prev => ({ ...prev, [stock.symbol]: true }));
+        setPurchaseMessage('');
+
+        try {
+            const purchaseData = {
+                userId: 1,
+                symbol: stock.symbol.toString().trim(),
+                quantity: parseInt(quantity),
+                priceAtPurchase: parseFloat(stock.price)
+            };
+
+            const response = await fetch('http://localhost:3000/api/purchases', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(purchaseData)
+            });
+
+            if (response.ok) {
+                // Actualizar saldo local
+                setUserBalance(prev => prev - totalCost);
+                
+                // Resetear cantidad seleccionada
+                setSelectedQuantities(prev => ({
+                    ...prev,
+                    [stock.symbol]: 1
+                }));
+                
+                setPurchaseMessage(
+                    `✅ Compra exitosa: ${quantity} acciones de ${stock.symbol} por $${totalCost.toLocaleString()}`
+                );
+                
+                setTimeout(() => {
+                    fetchStocks();
+                    fetchUserBalance(); // Refrescar saldo desde el servidor
+                    setPurchaseMessage('');
+                }, 2000);
+                
+            } else {
+                const errorData = await response.json();
+                setPurchaseMessage(`❌ Error: ${errorData.error || 'Error en el servidor'}`);
+                setTimeout(() => setPurchaseMessage(''), 5000);
+            }
+        } catch (error) {
+            setPurchaseMessage(`❌ Error de conexión: ${error.message}`);
+            setTimeout(() => setPurchaseMessage(''), 5000);
+        } finally {
+            setPurchaseLoading(prev => ({ ...prev, [stock.symbol]: false }));
+        }
+    };
+
     const handlePrevPage = () => {
         if (page > 1) setPage(page - 1);
     };
@@ -96,9 +187,45 @@ export default function TestStocks() {
         setTimeout(() => fetchStocks(true), 0);
     };
 
+    // Función para manejar cambio de cantidad
+    const handleQuantityChange = (symbol, quantity) => {
+        setSelectedQuantities(prev => ({
+            ...prev,
+            [symbol]: quantity
+        }));
+    };
+
     return (
         <div className="stocks-container">
-            <h2>Listado de Stocks Disponibles</h2>
+            <h2>📈 Listado de Stocks Disponibles</h2>
+            
+            {/* NUEVO: Mensaje de compras */}
+            {purchaseMessage && (
+                <div className={`purchase-message ${purchaseMessage.includes('✅') ? 'success' : 'error'}`}>
+                    {purchaseMessage}
+                </div>
+            )}
+            
+            {/* SECCIÓN DE BILLETERA */}
+            <div className="wallet-section" style={{
+                background: '#f8f9fa',
+                padding: '15px',
+                borderRadius: '8px',
+                margin: '15px 0',
+                border: '1px solid #dee2e6'
+            }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                        <h3 style={{ margin: '0 0 5px 0', color: '#495057' }}>💳 Mi Billetera</h3>
+                        <p style={{ margin: 0, fontSize: '18px', fontWeight: 'bold', color: '#28a745' }}>
+                            Saldo disponible: ${userBalance.toLocaleString()}
+                        </p>
+                    </div>
+                    <Link to="/wallet" className="button" style={{ textDecoration: 'none' }}>
+                        Gestionar Billetera
+                    </Link>
+                </div>
+            </div>
             
             <div className="filters-section">
                 <div className="filters-header">
@@ -258,6 +385,7 @@ export default function TestStocks() {
                             <tr>
                                 <th>Símbolo</th>
                                 <th>Nombre</th>
+                                <th>🛒 Comprar</th> {/* ← Esta debería usar la misma clase que las otras */}
                                 <th>Precio</th>
                                 <th>Cantidad</th>
                                 <th>Fecha</th>
@@ -269,7 +397,51 @@ export default function TestStocks() {
                                 <tr key={stock.id}>
                                     <td>{stock.symbol}</td>
                                     <td>{stock.long_name}</td>
-                                    <td>${stock.price}</td>
+                                    
+                                    {/* ← Usar la misma clase que las otras celdas */}
+                                    <td>
+                                        <div style={{
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            gap: '4px',
+                                            alignItems: 'center'
+                                        }}>
+                                            <button
+                                                className="view-button"
+                                                onClick={() => handlePurchase(stock)}
+                                                disabled={purchaseLoading[stock.symbol] || stock.quantity === 0 || userBalance < (stock.price * (selectedQuantities[stock.symbol] || 1))}
+                                                title={`Comprar ${selectedQuantities[stock.symbol] || 1} acciones de ${stock.symbol}`}
+                                            >
+                                                {purchaseLoading[stock.symbol] ? '⏳' : `🛒 ${selectedQuantities[stock.symbol] || 1}`}
+                                            </button>
+                                            
+                                            <select 
+                                                value={selectedQuantities[stock.symbol] || 1}
+                                                onChange={(e) => handleQuantityChange(stock.symbol, parseInt(e.target.value))}
+                                                disabled={purchaseLoading[stock.symbol] || stock.quantity === 0}
+                                                style={{
+                                                    padding: '3px 6px',
+                                                    borderRadius: '4px',
+                                                    fontSize: '11px',
+                                                    minWidth: '45px'
+                                                }}
+                                            >
+                                                {Array.from({ length: Math.min(stock.quantity, 50) }, (_, i) => i + 1).map(num => (
+                                                    <option key={num} value={num}>{num}</option>
+                                                ))}
+                                            </select>
+                                            
+                                            {stock.quantity === 0 && (
+                                                <span style={{ fontSize: '10px', color: 'red' }}>Sin stock</span>
+                                            )}
+                                            
+                                            {userBalance < (stock.price * (selectedQuantities[stock.symbol] || 1)) && (
+                                                <span style={{ fontSize: '10px', color: 'orange' }}>Saldo insuficiente</span>
+                                            )}
+                                        </div>
+                                    </td>
+
+                                    <td>${stock.price.toLocaleString()}</td>
                                     <td>{stock.quantity}</td>
                                     <td>{new Date(stock.timestamp).toLocaleDateString()}</td>
                                     <td>

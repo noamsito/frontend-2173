@@ -15,46 +15,112 @@ const Wallet = () => {
   }, []);
 
   const fetchBalance = async () => {
+    console.log('🔍 INICIO DEBUG - fetchBalance');
+    setLoading(true); // Agregar esto
+    
     try {
-      setLoading(true);
-      const data = await getWalletBalance();
-      setBalance(data.balance);
-      setError('');
-    } catch (err) {
-      setError('No se pudo cargar el saldo. Por favor, intenta de nuevo.');
-      console.error(err);
+        console.log('🚀 Obteniendo balance de: http://localhost:3000/api/users/1/balance');
+        
+        const response = await fetch('http://localhost:3000/api/users/1/balance');
+        
+        console.log('📨 Balance response - Status:', response.status);
+        console.log('📨 Balance response - OK:', response.ok);
+        
+        const responseText = await response.text();
+        console.log('📄 Balance RAW:', responseText);
+        
+        if (response.ok) {
+            const data = JSON.parse(responseText);
+            console.log('💰 Balance parseado:', data);
+            setBalance(data.balance || 0);
+        } else {
+            console.error('❌ Error obteniendo balance:', responseText);
+        }
+    } catch (error) {
+        console.error('💥 ERROR fetchBalance:', error);
+        setBalance(0);
     } finally {
-      setLoading(false);
+        setLoading(false); // ¡ESTO SIEMPRE SE EJECUTA!
     }
+    
+    console.log('🏁 FIN DEBUG - fetchBalance');
   };
 
   const handleDeposit = async (e) => {
-    e.preventDefault();
-    if (!depositAmount || isNaN(parseFloat(depositAmount)) || parseFloat(depositAmount) <= 0) {
-      setError('Por favor, ingresa un monto válido mayor a cero.');
-      return;
-    }
-  
+    e.preventDefault(); // ¡ESTO FALTABA!
+    
+    console.log('🔍 INICIO DEBUG - handleDeposit');
+    console.log('💰 Monto a depositar:', depositAmount);
+    console.log('🌐 URL del backend:', 'http://localhost:3000/api/users/1/deposit');
+    
+    setLoading(true);
+    setSuccessMessage('');
+    setError('');
+    
     try {
-      setLoading(true);
-      const amount = parseFloat(depositAmount);
-      const data = await depositToWallet(amount);
-      
-      setBalance(data.balance);
-      setDepositAmount('');
-      setSuccessMessage('¡Depósito realizado con éxito!');
-      setError('');
-      setRetryAvailable(false);
-      setLastDepositAmount('');
-      
-      // Limpiar mensaje de éxito después de 3 segundos
-      setTimeout(() => setSuccessMessage(''), 3000);
-    } catch (err) {
-      setError('Error al realizar el depósito. Puedes intentar una vez más.');
-      setRetryAvailable(true);
-      setLastDepositAmount(depositAmount);
+        // Validación inicial
+        if (!depositAmount || depositAmount <= 0) {
+            console.log('❌ Error: Monto inválido');
+            setError('Por favor ingresa un monto válido');
+            return; // Ya no necesita setLoading(false) aquí porque va al finally
+        }
+
+        const requestData = {
+            amount: parseFloat(depositAmount)
+        };
+        
+        console.log('📤 Datos a enviar:', requestData);
+        console.log('🚀 Realizando fetch...');
+
+        const response = await fetch('http://localhost:3000/api/users/1/deposit', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestData)
+        });
+
+        console.log('📨 Respuesta recibida - Status:', response.status);
+        console.log('📨 Respuesta recibida - OK:', response.ok);
+
+        const responseText = await response.text();
+        console.log('📄 Respuesta RAW:', responseText);
+
+        let data;
+        try {
+            data = JSON.parse(responseText);
+            console.log('✅ JSON parseado:', data);
+        } catch (parseError) {
+            console.error('❌ Error parseando JSON:', parseError);
+            throw new Error(`Error parseando respuesta: ${responseText.substring(0, 100)}`);
+        }
+
+        if (response.ok && data.success) {
+            console.log('🎉 Depósito exitoso!');
+            setSuccessMessage(`✅ ${data.message}`);
+            setDepositAmount('');
+            
+            // Actualizar balance local
+            console.log('🔄 Actualizando balance local...');
+            await fetchBalance();
+        } else {
+            console.log('❌ Error en la respuesta:', data);
+            setError(`❌ Error: ${data.error || 'Error desconocido'}`);
+        }
+
+    } catch (error) {
+        console.error('💥 ERROR COMPLETO:', error);
+        
+        if (error.name === 'TypeError' && error.message.includes('fetch')) {
+            setError('❌ Error de conexión: No se puede conectar al servidor. Verifica que Docker esté ejecutándose.');
+        } else if (error.message.includes('CORS')) {
+            setError('❌ Error de CORS: Problema de configuración del servidor.');
+        } else {
+            setError(`❌ Error: ${error.message}`);
+        }
     } finally {
-      setLoading(false);
+        setLoading(false); // ¡ESTO SIEMPRE SE EJECUTA!
+        console.log('🏁 FIN DEBUG - handleDeposit');
     }
   };
   
