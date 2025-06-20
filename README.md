@@ -156,3 +156,71 @@ npm test
 # Coverage
 npm run test:coverage
 ```
+
+## 🚀 Nuevas Funcionalidades E3
+
+### 🏛️ Sistema de Subastas (RF04)
+- **Crear subastas**: Los usuarios autenticados pueden crear nuevas subastas de acciones
+- **Hacer ofertas**: Participar en subastas activas con ofertas competitivas
+- **Cerrar subastas**: Finalizar subastas y determinar ganadores
+- **Vista en tiempo real**: Actualización automática cada 30 segundos
+
+### 🔄 Sistema de Intercambios (RF05)
+- **Proponer intercambios**: Ofrecer acciones propias a cambio de otras
+- **Gestionar propuestas**: Aceptar o rechazar intercambios pendientes
+- **Historial completo**: Ver todos los intercambios pasados
+- **Comunicación entre grupos**: Intercambiar con otros grupos del curso
+
+## 📱 Páginas Disponibles
+
+1. **Acciones** (`/stocks`): Lista de todas las acciones disponibles
+2. **Mis Compras** (`/my-purchases`): Historial de compras del usuario
+3. **Billetera** (`/wallet`): Gestión del saldo y transacciones
+4. **Registro de Eventos** (`/event-log`): Log de eventos del sistema
+5. **🏛️ Subastas** (`/auctions`): Sistema completo de subastas
+6. **🔄 Intercambios** (`/exchanges`): Propuestas y gestión de intercambios
+
+## 🛠️ Instalación
+
+```bash
+npm install
+npm run dev
+```
+
+## 🔧 Variables de Entorno
+
+Crear archivo `.env` con:
+```
+VITE_API_URL=http://localhost:3000
+VITE_AUTH0_DOMAIN=tu-dominio.auth0.com
+VITE_AUTH0_CLIENT_ID=tu-client-id
+VITE_AUTH0_AUDIENCE=tu-audience
+```
+
+## 🎨 Tecnologías Utilizadas
+
+- React + Vite
+- React Router
+- Auth0 para autenticación
+- CSS moderno con diseño responsive
+- Fetch API para comunicación con backend
+
+## 📡 Integración MQTT
+
+El sistema se comunica automáticamente con otros grupos a través del broker MQTT:
+- **RNF04**: Recibe subastas e intercambios de otros grupos
+- **RNF05**: Publica automáticamente las acciones locales
+
+## 👥 Funcionalidades por Rol
+
+### Usuarios Autenticados
+- ✅ Ver todas las subastas activas
+- ✅ Hacer ofertas en subastas
+- ✅ Crear nuevas subastas
+- ✅ Proponer intercambios
+- ✅ Gestionar intercambios pendientes
+
+### Notas
+- Las validaciones de permisos se manejan en el backend
+- La interfaz muestra los botones a todos los usuarios autenticados
+- El backend determinará si el usuario tiene permisos para cada acción
