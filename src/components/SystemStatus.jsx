@@ -13,17 +13,31 @@ const SystemStatus = () => {
   useEffect(() => {
     const fetchStatus = async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/purchases/stats`);
+        // Primero verificar conectividad con health check
+        const healthResponse = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/health`);
         
-        if (response.ok) {
-          const data = await response.json();
+        if (!healthResponse.ok) {
+          setStatus(prev => ({ ...prev, isOnline: false }));
+          return;
+        }
+
+        // Si la conectividad está OK, obtener estadísticas
+        const statsResponse = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/purchases/stats`);
+        
+        if (statsResponse.ok) {
+          const data = await statsResponse.json();
           setStatus({
             ...data,
             lastUpdate: new Date(),
             isOnline: true
           });
         } else {
-          setStatus(prev => ({ ...prev, isOnline: false }));
+          // Si stats falla pero health funciona, marcar como online pero sin datos
+          setStatus(prev => ({ 
+            ...prev, 
+            isOnline: true,
+            lastUpdate: new Date()
+          }));
         }
       } catch (error) {
         console.error('Error fetching system status:', error);

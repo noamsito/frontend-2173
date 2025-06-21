@@ -26,6 +26,12 @@ const Navigation = () => {
         <Link to="/event-log" className={isActive('/event-log')}>
           Registro de Eventos
         </Link>
+        <Link to="/auctions" className={isActive('/auctions')}>
+          🏛️ Subastas
+        </Link>
+        <Link to="/exchanges" className={isActive('/exchanges')}>
+          🔄 Intercambios
+        </Link>
       </div>
     </nav>
   );

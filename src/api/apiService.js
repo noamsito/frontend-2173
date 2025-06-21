@@ -1,9 +1,9 @@
 import axios from "axios";
-import { getAuth0Client } from "../auth0-config.jsx"; // Cambia .js por .jsx
+import { getAuth0Client } from "../auth0-config.jsx"; // Autenticación restaurada
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
-// Para obtener el token de Auth0
+// Para obtener el token de Auth0 - AUTENTICACIÓN RESTAURADA
 const getToken = async () => {
   try {
     const auth0 = await getAuth0Client();
@@ -14,7 +14,7 @@ const getToken = async () => {
   }
 };
 
-// Función de ayuda para crear headers con autenticación
+// Función de ayuda para crear headers con autenticación - AUTENTICACIÓN RESTAURADA
 const getAuthHeaders = async () => {
   const token = await getToken();
   return token ? { Authorization: `Bearer ${token}` } : {};

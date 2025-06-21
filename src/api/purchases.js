@@ -1,24 +1,37 @@
 // Create file: src/api/purchases.js
 import axios from "axios";
+import { getAuth0Client } from "../auth0-config.jsx";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 console.log("🔧 API_URL configurada:", API_URL); // DEBUG
 
-// Función de ayuda para crear headers sin autenticación (temporal)
-const getAuthHeaders = async () => {
-  return {}; // Sin headers por ahora
+// Función de ayuda para crear headers con autenticación restaurada
+
+const getToken = async () => {
+  try {
+    const auth0 = await getAuth0Client();
+    return await auth0.getTokenSilently();
+  } catch (error) {
+    console.error("Error obteniendo token:", error);
+    return null;
+  }
 };
 
-// Obtener compras de un usuario - usar userId hardcodeado para testing
+const getAuthHeaders = async () => {
+  const token = await getToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
+
+// Obtener compras de un usuario - usar endpoint correcto
 export const getUserPurchases = async (userId = 1) => {
   try {
     console.log("📡 Llamando a getUserPurchases para userId:", userId); // DEBUG
-    console.log("📡 URL completa:", `${API_URL}/api/purchases/user/${userId}`); // DEBUG
+    console.log("📡 URL completa:", `${API_URL}/purchases`); // DEBUG
     
     const headers = await getAuthHeaders();
     const response = await axios.get(
-      `${API_URL}/api/purchases/user/${userId}`,
+      `${API_URL}/purchases`,
       { headers }
     );
     

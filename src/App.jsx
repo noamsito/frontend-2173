@@ -9,10 +9,14 @@ import PurchaseDetail from './pages/PurchaseDetail';
 import Wallet from './pages/Wallet';
 import StockDetail from './pages/StockDetail';
 import EventLog from './pages/EventLog';
+import Auctions from './pages/Auctions';
+import Exchanges from './pages/Exchanges';
 
 import './App.css';
 import './styles/purchases.css';
-import './styles/SystemStatus.css'; // Cambia aquí la ruta correcta
+import './styles/SystemStatus.css';
+import './styles/auctions.css';
+import './styles/exchanges.css'; // Cambia aquí la ruta correcta
 
 function App() {
   const { isLoading, error, isAuthenticated, user } = useAuth0();
@@ -51,6 +55,8 @@ function App() {
                 <Route path="/purchases/:id" element={<PurchaseDetail />} />
                 <Route path="/wallet" element={<Wallet />} />
                 <Route path="/event-log" element={<EventLog />} />
+                <Route path="/auctions" element={<Auctions />} />
+                <Route path="/exchanges" element={<Exchanges />} />
               </Routes>
             </main>
           </>

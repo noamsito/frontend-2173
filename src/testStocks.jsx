@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { getStocks } from "./api/apiService";
+import { getStocks, getWalletBalance, buyStock } from "./api/apiService";
 import "./styles/stocks.css"; // ← AGREGAR ESTA LÍNEA
 
 export default function TestStocks() {
@@ -28,7 +28,10 @@ export default function TestStocks() {
 
     // Estados para cantidades seleccionadas
     const [selectedQuantities, setSelectedQuantities] = useState({});
-    const [userBalance, setUserBalance] = useState(0);
+    const [userBalance, setUserBalance] = useState(() => {
+        const saved = localStorage.getItem('walletBalance');
+        return saved ? parseFloat(saved) : 0;
+    });
 
     useEffect(() => {
         fetchStocks();
@@ -74,13 +77,19 @@ export default function TestStocks() {
     // FUNCIÓN: Obtener saldo del usuario
     const fetchUserBalance = async () => {
         try {
-            const response = await fetch('http://localhost:3000/api/users/1/balance');
-            if (response.ok) {
-                const data = await response.json();
-                setUserBalance(data.balance || 0);
-            }
+            console.log('📡 testStocks - Llamando a getWalletBalance()...');
+            const data = await getWalletBalance();
+            console.log('✅ testStocks - Respuesta:', data);
+            const balance = data.balance || 0;
+            console.log('💰 testStocks - Actualizando balance a:', balance);
+            setUserBalance(balance);
+            // Guardar en localStorage
+            localStorage.setItem('walletBalance', balance.toString());
         } catch (error) {
-            console.error('Error al obtener saldo:', error);
+            console.error('❌ testStocks - Error al obtener saldo:', error);
+            console.error('❌ testStocks - Error response:', error.response);
+            // NO poner en 0 si hay error
+            // setUserBalance(0);
         }
     };
 
@@ -106,20 +115,13 @@ export default function TestStocks() {
         setPurchaseMessage('');
 
         try {
-            const purchaseData = {
-                userId: 1,
-                symbol: stock.symbol.toString().trim(),
-                quantity: parseInt(quantity),
-                priceAtPurchase: parseFloat(stock.price)
-            };
-
-            const response = await fetch('http://localhost:3000/api/purchases', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(purchaseData)
-            });
-
-            if (response.ok) {
+            const result = await buyStock(stock.symbol, quantity);
+            
+            if (result.requiresPayment && result.webpayUrl) {
+                // Si requiere pago con WebPay, redirigir
+                window.location.href = result.webpayUrl;
+                return;
+            } else {
                 // Actualizar saldo local
                 setUserBalance(prev => prev - totalCost);
                 
@@ -139,12 +141,9 @@ export default function TestStocks() {
                     setPurchaseMessage('');
                 }, 2000);
                 
-            } else {
-                const errorData = await response.json();
-                setPurchaseMessage(`❌ Error: ${errorData.error || 'Error en el servidor'}`);
-                setTimeout(() => setPurchaseMessage(''), 5000);
             }
         } catch (error) {
+            console.error('Error en compra:', error);
             setPurchaseMessage(`❌ Error de conexión: ${error.message}`);
             setTimeout(() => setPurchaseMessage(''), 5000);
         } finally {
