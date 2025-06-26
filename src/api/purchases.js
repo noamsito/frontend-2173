@@ -1,14 +1,17 @@
 // Create file: src/api/purchases.js
 import axios from "axios";
 import { getAuth0Client } from "../auth0-config.jsx";
-
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+import { BYPASS_AUTH, API_URL } from "./apiConfig";
 
 console.log("🔧 API_URL configurada:", API_URL); // DEBUG
 
-// Función de ayuda para crear headers con autenticación restaurada
-
+// Función de ayuda para crear headers con autenticación
 const getToken = async () => {
+  if (BYPASS_AUTH) {
+    console.log('🔧 Auth bypass enabled - skipping token');
+    return null;
+  }
+  
   try {
     const auth0 = await getAuth0Client();
     return await auth0.getTokenSilently();

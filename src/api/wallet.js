@@ -1,15 +1,19 @@
 // Create file: src/api/wallet.js
 import axios from "axios";
 import { getAuth0Client } from "../auth0-config";
-
-const API_URL = import.meta.env.VITE_API_URL;
+import { BYPASS_AUTH, API_URL } from "./apiConfig";
 
 const getToken = async () => {
+  if (BYPASS_AUTH) {
+    console.log('🔧 Auth bypass enabled - skipping token');
+    return null;
+  }
+  
   try {
     const auth0 = await getAuth0Client();
     return await auth0.getTokenSilently();
   } catch (error) {
-    console.error("Error obtaining token:", error);
+    console.error("Error obteniendo token:", error);
     return null;
   }
 };
@@ -32,28 +36,26 @@ export const getWalletBalance = async () => {
 
 export const depositToWallet = async (amount) => {
   try {
-    // Primero, asegurarse de que el usuario esté registrado
-    await registerUserIfNeeded();
-    
-    const token = await getToken();
-    
-    if (!token) {
-      throw new Error("No se pudo obtener un token de autenticación");
+    if (!BYPASS_AUTH) {
+      // Primero, asegurarse de que el usuario esté registrado
+      await registerUserIfNeeded();
     }
     
-    // Obtener el perfil del usuario para enviar el ID de Auth0 como respaldo
-    const auth0 = await getAuth0Client();
-    const user = await auth0.getUser();
+    const token = await getToken();
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
     
-    const headers = { Authorization: `Bearer ${token}` };
+    let requestBody = { amount };
     
-    // Incluir el ID de Auth0 en el body como respaldo
+    if (!BYPASS_AUTH && token) {
+      // Obtener el perfil del usuario para enviar el ID de Auth0 como respaldo
+      const auth0 = await getAuth0Client();
+      const user = await auth0.getUser();
+      requestBody.auth0Id = user.sub; // Incluye el ID de Auth0 como respaldo
+    }
+    
     const response = await axios.post(
       `${API_URL}/wallet/deposit`,
-      { 
-        amount,
-        auth0Id: user.sub // Incluye el ID de Auth0 como respaldo
-      },
+      requestBody,
       { headers }
     );
     return response.data;
@@ -64,6 +66,11 @@ export const depositToWallet = async (amount) => {
 };
 
 export const registerUserIfNeeded = async () => {
+  if (BYPASS_AUTH) {
+    console.log('🔧 Auth bypass - skipping user registration');
+    return true;
+  }
+  
   try {
     const token = await getToken();
     if (!token) return false;

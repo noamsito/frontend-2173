@@ -10,7 +10,7 @@ export const getAuth0Client = async () => {
       authorizationParams: {
         redirect_uri: window.location.origin,
         audience: "https://stockmarket-api/",
-        scope: "openid profile email" // Añadir scope para asegurar que se incluya el sub
+        scope: "openid profile email offline_access" // Añadir offline_access para refresh tokens
       }
     });
   }

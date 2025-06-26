@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
+import { BYPASS_AUTH, API_URL } from '../api/apiConfig';
 import '../styles/auctions.css';
 
 const Auctions = () => {
@@ -17,10 +18,33 @@ const Auctions = () => {
     duration_minutes: '30'
   });
 
+  // Helper para hacer requests con o sin autenticación
+  const makeRequest = async (url, options = {}) => {
+    if (BYPASS_AUTH) {
+      return fetch(`${API_URL}${url}`, {
+        ...options,
+        headers: {
+          'Content-Type': 'application/json',
+          ...options.headers
+        }
+      });
+    } else {
+      const token = await getAccessTokenSilently();
+      return fetch(`${API_URL}${url}`, {
+        ...options,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+          ...options.headers
+        }
+      });
+    }
+  };
+
   // Cargar subastas activas
   const fetchAuctions = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/auctions`);
+      const response = await fetch(`${API_URL}/auctions`);
       if (response.ok) {
         const data = await response.json();
         setAuctions(data.auctions || []);
@@ -45,19 +69,14 @@ const Auctions = () => {
   const handleCreateAuction = async (e) => {
     e.preventDefault();
     try {
-      const token = await getAccessTokenSilently();
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/auctions`, {
+      const response = await makeRequest('/auctions', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
         body: JSON.stringify({
           ...newAuction,
           quantity: parseInt(newAuction.quantity),
           starting_price: parseFloat(newAuction.starting_price),
           duration_minutes: parseInt(newAuction.duration_minutes)
-        }),
+        })
       });
 
       if (response.ok) {
@@ -80,14 +99,9 @@ const Auctions = () => {
     if (!bidAmount || isNaN(bidAmount)) return;
 
     try {
-      const token = await getAccessTokenSilently();
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/auctions/${auctionId}/bid`, {
+      const response = await makeRequest(`/auctions/${auctionId}/bid`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ bid_amount: parseFloat(bidAmount) }),
+        body: JSON.stringify({ bid_amount: parseFloat(bidAmount) })
       });
 
       if (response.ok) {
@@ -107,12 +121,8 @@ const Auctions = () => {
     if (!confirm('¿Estás seguro de cerrar esta subasta?')) return;
 
     try {
-      const token = await getAccessTokenSilently();
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/auctions/${auctionId}/close`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const response = await makeRequest(`/auctions/${auctionId}/close`, {
+        method: 'POST'
       });
 
       if (response.ok) {
@@ -138,7 +148,7 @@ const Auctions = () => {
           <span>📊 {auctions.length} subastas activas</span>
           <span>🔄 Actualización automática cada 30s</span>
         </div>
-        {isAuthenticated && (
+        {(BYPASS_AUTH || isAuthenticated) && (
           <button 
             className="btn-primary"
             onClick={() => setShowCreateForm(!showCreateForm)}
@@ -149,7 +159,7 @@ const Auctions = () => {
       </div>
 
       {/* Formulario para crear subasta */}
-      {showCreateForm && isAuthenticated && (
+      {showCreateForm && (BYPASS_AUTH || isAuthenticated) && (
         <div className="create-auction-form">
           <h3>Crear Nueva Subasta</h3>
           <form onSubmit={handleCreateAuction}>
@@ -255,7 +265,7 @@ const Auctions = () => {
                 >
                   💸 Hacer Oferta
                 </button>
-                {isAuthenticated && (
+                {(BYPASS_AUTH || isAuthenticated) && (
                   <button 
                     className="btn-danger"
                     onClick={() => handleCloseAuction(auction.id)}
@@ -272,9 +282,10 @@ const Auctions = () => {
       <div className="auctions-info">
         <h4>ℹ️ Información del Sistema</h4>
         <ul>
-          <li><strong>RNF04:</strong> ✅ Recibiendo subastas de otros grupos via MQTT</li>
-          <li><strong>RNF05:</strong> ✅ Publicando nuestras subastas al broker automáticamente</li>
+          <li><strong>MQTT:</strong> ✅ Recibiendo subastas de otros grupos via MQTT</li>
+          <li><strong>Publicación:</strong> ✅ Publicando nuestras subastas al broker automáticamente</li>
           <li><strong>RF04:</strong> ✅ Sistema completo de subastas implementado</li>
+          {BYPASS_AUTH && <li><strong>Modo Bypass:</strong> ⚠️ Autenticación deshabilitada para pruebas</li>}
         </ul>
       </div>
     </div>

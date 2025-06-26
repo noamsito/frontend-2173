@@ -1,434 +1,567 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth0 } from '@auth0/auth0-react';
+import { apiConfig } from '../api/apiConfig';
 import '../styles/exchanges.css';
 
 const Exchanges = () => {
-  const { getAccessTokenSilently, isAuthenticated } = useAuth0();
-  const [pendingExchanges, setPendingExchanges] = useState([]);
-  const [exchangeHistory, setExchangeHistory] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [activeTab, setActiveTab] = useState('pending');
+    const [symbol, setSymbol] = useState('');
+    const [quantity, setQuantity] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [message, setMessage] = useState('');
+    const [externalOffers, setExternalOffers] = useState([]);
+    const [selectedOffer, setSelectedOffer] = useState(null);
+    const [proposalQuantity, setProposalQuantity] = useState('');
+    const [proposalSymbol, setProposalSymbol] = useState('');
+    const [lastUpdate, setLastUpdate] = useState(null);
+    const [exchangeHistory, setExchangeHistory] = useState([]);
+    const [userStocks, setUserStocks] = useState([]);
 
-  // Form state para crear intercambio
-  const [newExchange, setNewExchange] = useState({
-    target_group_id: '',
-    offered_symbol: '',
-    offered_quantity: '',
-    requested_symbol: '',
-    requested_quantity: ''
-  });
-
-  // Cargar intercambios pendientes (RF05)
-  const fetchPendingExchanges = async () => {
-    try {
-      const token = await getAccessTokenSilently();
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/exchanges/pending`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setPendingExchanges(data.exchanges || []);
-      }
-    } catch (error) {
-      console.error('Error cargando intercambios pendientes:', error);
-    }
-  };
-
-  // Cargar historial de intercambios (RF05)
-  const fetchExchangeHistory = async () => {
-    try {
-      const token = await getAccessTokenSilently();
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/exchanges/history`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setExchangeHistory(data.exchanges || []);
-      }
-    } catch (error) {
-      console.error('Error cargando historial:', error);
-    }
-  };
-
-  useEffect(() => {
-    const loadData = async () => {
-      if (isAuthenticated) {
-        setLoading(true);
-        await Promise.all([fetchPendingExchanges(), fetchExchangeHistory()]);
-        setLoading(false);
-      }
+    // Función para obtener las acciones que posee el usuario
+    const fetchUserStocks = async () => {
+        try {
+            const response = await fetch('http://localhost:3000/admin/my-stocks');
+            if (response.ok) {
+                const data = await response.json();
+                console.log('📦 Inventario real recibido desde MIS ACCIONES:', data);
+                
+                if (data.status === 'success' && data.stocks) {
+                    // Los datos ya vienen procesados desde el backend
+                    setUserStocks(data.stocks);
+                    console.log('📊 Acciones disponibles (inventario real):', data.stocks);
+                } else {
+                    console.error('Error en respuesta del inventario:', data);
+                    setUserStocks([]);
+                }
+            } else {
+                console.error('Error HTTP al obtener inventario:', response.status, response.statusText);
+                setUserStocks([]);
+            }
+        } catch (error) {
+            console.error('Error fetching user stocks:', error);
+            setUserStocks([]);
+        }
     };
 
-    loadData();
-    // Actualizar cada 30 segundos
-    const interval = setInterval(loadData, 30000);
-    return () => clearInterval(interval);
-  }, [getAccessTokenSilently, isAuthenticated]);
+    // Función para obtener historial de intercambios
+    const fetchExchangeHistory = async () => {
+        try {
+            const response = await fetch('http://localhost:3000/admin/exchange-history');
+            if (response.ok) {
+                const data = await response.json();
+                setExchangeHistory(data.history || []);
+            }
+        } catch (error) {
+            console.error('Error fetching exchange history:', error);
+        }
+    };
 
-  // Proponer intercambio (RF05)
-  const handleCreateExchange = async (e) => {
-    e.preventDefault();
-    try {
-      const token = await getAccessTokenSilently();
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/exchanges`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          ...newExchange,
-          target_group_id: parseInt(newExchange.target_group_id),
-          offered_quantity: parseInt(newExchange.offered_quantity),
-          requested_quantity: parseInt(newExchange.requested_quantity)
-        }),
-      });
-
-      if (response.ok) {
-        alert('✅ Propuesta de intercambio enviada y publicada al broker!');
-        setShowCreateForm(false);
-        setNewExchange({
-          target_group_id: '',
-          offered_symbol: '',
-          offered_quantity: '',
-          requested_symbol: '',
-          requested_quantity: ''
-        });
-        fetchPendingExchanges();
-      } else {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Error creando intercambio');
-      }
-    } catch (error) {
-      alert(`❌ Error: ${error.message}`);
-    }
-  };
-
-  // Responder a intercambio (RF05 - aceptar/rechazar)
-  const handleRespondToExchange = async (exchangeId, action, reason = '') => {
-    try {
-      const token = await getAccessTokenSilently();
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/exchanges/${exchangeId}/respond`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ action, reason }),
-      });
-
-      if (response.ok) {
-        const actionText = action === 'accept' ? 'aceptado' : 'rechazado';
-        alert(`✅ Intercambio ${actionText} exitosamente!`);
-        fetchPendingExchanges();
+    useEffect(() => {
+        // Cargar ofertas al inicializar
+        loadExternalOffers();
         fetchExchangeHistory();
-      } else {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Error respondiendo intercambio');
-      }
-    } catch (error) {
-      alert(`❌ Error: ${error.message}`);
-    }
-  };
+        fetchUserStocks();
+        
+        // Auto-actualizar cada 10 segundos
+        const interval = setInterval(() => {
+            loadExternalOffers();
+            fetchExchangeHistory();
+            fetchUserStocks();
+        }, 10000);
 
-  const handleAcceptExchange = (exchangeId) => {
-    if (confirm('¿Estás seguro de aceptar este intercambio?')) {
-      handleRespondToExchange(exchangeId, 'accept');
-    }
-  };
+        return () => clearInterval(interval);
+    }, []);
 
-  const handleRejectExchange = (exchangeId) => {
-    const reason = prompt('¿Por qué rechazas este intercambio? (opcional)');
-    if (reason !== null) {
-      handleRespondToExchange(exchangeId, 'reject', reason);
-    }
-  };
+    const loadExternalOffers = async () => {
+        try {
+            const response = await fetch(`${apiConfig.baseURL}/admin/external-offers`, {
+                headers: apiConfig.getHeaders()
+            });
+            const data = await response.json();
+            if (data.status === 'success') {
+                setExternalOffers(data.offers);
+                setLastUpdate(new Date());
+            }
+        } catch (error) {
+            console.error('Error al cargar ofertas externas:', error);
+        }
+    };
 
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case 'PENDING': return '⏳';
-      case 'ACCEPTED': return '✅';
-      case 'REJECTED': return '❌';
-      case 'CANCELLED': return '🚫';
-      default: return '❓';
-    }
-  };
+    // Crear oferta general
+    const handleCreateOffer = async () => {
+        if (!symbol || !quantity) {
+            setMessage('⚠️ Por favor, completa todos los campos');
+            return;
+        }
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'PENDING': return '#f39c12';
-      case 'ACCEPTED': return '#27ae60';
-      case 'REJECTED': return '#e74c3c';
-      case 'CANCELLED': return '#95a5a6';
-      default: return '#bdc3c7';
-    }
-  };
+        // Verificar que el usuario tiene suficientes acciones del símbolo seleccionado
+        const userStock = userStocks.find(stock => stock.symbol === symbol);
+        if (!userStock) {
+            alert(`No posees acciones de ${symbol}`);
+            return;
+        }
+        
+        if (parseInt(quantity) > userStock.quantity) {
+            alert(`Solo posees ${userStock.quantity} acciones de ${symbol}. No puedes ofrecer ${quantity}.`);
+            return;
+        }
 
-  if (loading) return <div className="loading">Cargando intercambios...</div>;
+        setLoading(true);
+        try {
+            const response = await fetch('http://localhost:3000/admin/auctions/offer', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    symbol: symbol,
+                    quantity: parseInt(quantity)
+                })
+            });
 
-  return (
-    <div className="exchanges-container">
-      <div className="exchanges-header">
-        <h1>🔄 Sistema de Intercambios</h1>
-        <div className="exchange-stats">
-          <span>📥 {pendingExchanges.length} pendientes</span>
-          <span>📋 {exchangeHistory.length} en historial</span>
-        </div>
-        {isAuthenticated && (
-          <button 
-            className="btn-primary"
-            onClick={() => setShowCreateForm(!showCreateForm)}
-          >
-            ➕ Proponer Intercambio
-          </button>
-        )}
-      </div>
+            if (response.ok) {
+                const result = await response.json();
+                setMessage(`✅ ${result.message}`);
+                console.log('🎯 Oferta creada:', result.auction);
+                
+                // Limpiar formulario
+                setSymbol('');
+                setQuantity('');
+                
+                // Actualizar datos
+                await fetchUserStocks();
+                await fetchExchangeHistory();
+            } else {
+                const errorData = await response.json();
+                setMessage(`❌ ${errorData.error}`);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            setMessage('❌ Error de conexión');
+        } finally {
+            setLoading(false);
+        }
+    };
 
-      {/* Formulario para crear intercambio */}
-      {showCreateForm && isAuthenticated && (
-        <div className="create-exchange-form">
-          <h3>Proponer Nuevo Intercambio</h3>
-          <form onSubmit={handleCreateExchange}>
-            <div className="form-row">
-              <div className="form-group">
-                <label>Grupo Objetivo:</label>
-                <input
-                  type="number"
-                  value={newExchange.target_group_id}
-                  onChange={(e) => setNewExchange({...newExchange, target_group_id: e.target.value})}
-                  placeholder="Ej: 2"
-                  min="1"
-                  required
-                />
-              </div>
-            </div>
+    // Crear propuesta como respuesta a una oferta existente
+    const handleCreateProposal = async (originalOffer) => {
+        if (!proposalQuantity || !proposalSymbol) {
+            alert('Por favor completa el símbolo y la cantidad');
+            return;
+        }
+
+        // Verificar que el usuario tiene suficientes acciones del símbolo seleccionado
+        const userStock = userStocks.find(stock => stock.symbol === proposalSymbol);
+        if (!userStock) {
+            alert(`No posees acciones de ${proposalSymbol}`);
+            return;
+        }
+        
+        if (parseInt(proposalQuantity) > userStock.quantity) {
+            alert(`Solo posees ${userStock.quantity} acciones de ${proposalSymbol}. No puedes ofrecer ${proposalQuantity}.`);
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const response = await fetch('http://localhost:3000/admin/auctions/proposal', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    symbol: proposalSymbol, // Usar el símbolo seleccionado
+                    quantity: parseInt(proposalQuantity),
+                    auction_id: originalOffer.auction_id,
+                    target_group_id: originalOffer.group_id
+                })
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                console.log('✅ Propuesta creada:', result);
+                alert(`¡Contrapropuesta enviada! Ofreces ${proposalQuantity} ${proposalSymbol} por ${originalOffer.quantity} ${originalOffer.symbol}`);
+                
+                // Limpiar formulario
+                setSelectedOffer(null);
+                setProposalQuantity('');
+                setProposalSymbol('');
+                
+                // Actualizar datos
+                await fetchUserStocks();
+                await fetchExchangeHistory();
+            } else {
+                throw new Error(`Error ${response.status}`);
+            }
+        } catch (error) {
+            console.error('Error enviando propuesta:', error);
+            alert('Error al enviar la contrapropuesta');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Aceptar o rechazar propuesta
+    const handleAcceptProposal = async (proposal) => {
+        setLoading(true);
+        try {
+            const response = await fetch('http://localhost:3000/admin/auctions/respond', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    auction_id: proposal.auction_id,
+                    proposal_id: proposal.proposal_id,
+                    action: 'accept',
+                    symbol: proposal.symbol, // Mantener símbolo de la propuesta
+                    quantity: proposal.quantity // Mantener cantidad de la propuesta
+                })
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                console.log('✅ Propuesta aceptada:', result);
+                alert(`¡Propuesta aceptada! Intercambio: ${proposal.quantity} ${proposal.symbol}`);
+                await loadExternalOffers(); // Actualizar lista
+                await fetchExchangeHistory(); // Actualizar historial
+                await fetchUserStocks(); // Actualizar inventario
+            } else {
+                throw new Error(`Error ${response.status}`);
+            }
+        } catch (error) {
+            console.error('Error aceptando propuesta:', error);
+            alert('Error al aceptar la propuesta');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleRejectProposal = async (proposal) => {
+        setLoading(true);
+        try {
+            const response = await fetch('http://localhost:3000/admin/auctions/respond', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    auction_id: proposal.auction_id,
+                    proposal_id: proposal.proposal_id,
+                    action: 'reject',
+                    symbol: proposal.symbol, // Mantener símbolo de la propuesta
+                    quantity: proposal.quantity // Mantener cantidad de la propuesta
+                })
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                console.log('✅ Propuesta rechazada:', result);
+                alert(`Propuesta rechazada: ${proposal.quantity} ${proposal.symbol}`);
+                await loadExternalOffers(); // Actualizar lista
+                await fetchExchangeHistory(); // Actualizar historial
+            } else {
+                throw new Error(`Error ${response.status}`);
+            }
+        } catch (error) {
+            console.error('Error rechazando propuesta:', error);
+            alert('Error al rechazar la propuesta');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="exchanges-container">
+            <h1>🔄 Sistema de Ofertas e Intercambios</h1>
             
-            <div className="exchange-sides">
-              <div className="offer-side">
-                <h4>🤝 Ofrecemos</h4>
-                <div className="form-group">
-                  <label>Símbolo:</label>
-                  <input
-                    type="text"
-                    value={newExchange.offered_symbol}
-                    onChange={(e) => setNewExchange({...newExchange, offered_symbol: e.target.value.toUpperCase()})}
-                    placeholder="Ej: AAPL"
-                    required
-                  />
+            {message && (
+                <div className={`message ${message.includes('✅') ? 'success' : 'error'}`}>
+                    {message}
                 </div>
-                <div className="form-group">
-                  <label>Cantidad:</label>
-                  <input
-                    type="number"
-                    value={newExchange.offered_quantity}
-                    onChange={(e) => setNewExchange({...newExchange, offered_quantity: e.target.value})}
-                    min="1"
-                    required
-                  />
-                </div>
-              </div>
+            )}
 
-              <div className="exchange-arrow">⇄</div>
+            {/* Formulario para crear ofertas generales */}
+            <div className="exchange-form">
+                <h2>📢 Crear Oferta General</h2>
+                <p>Publica una oferta que será visible para todos los grupos</p>
+                
+                <div className="form-group">
+                    <label>Símbolo de la Acción que Posees:</label>
+                    <select
+                        value={symbol}
+                        onChange={(e) => setSymbol(e.target.value)}
+                    >
+                        <option value="">Selecciona un símbolo que posees</option>
+                        {userStocks.map(stock => (
+                            <option key={stock.symbol} value={stock.symbol}>
+                                {stock.symbol} (Disponibles: {stock.quantity})
+                            </option>
+                        ))}
+                    </select>
+                    {userStocks.length === 0 && (
+                        <small className="no-stocks-warning">
+                            ⚠️ No posees acciones para ofrecer. Ve a "Mis Acciones" para ver tu inventario.
+                        </small>
+                    )}
+                </div>
 
-              <div className="request-side">
-                <h4>🎯 Solicitamos</h4>
                 <div className="form-group">
-                  <label>Símbolo:</label>
-                  <input
-                    type="text"
-                    value={newExchange.requested_symbol}
-                    onChange={(e) => setNewExchange({...newExchange, requested_symbol: e.target.value.toUpperCase()})}
-                    placeholder="Ej: GOOGL"
-                    required
-                  />
+                    <label>Cantidad:</label>
+                    <input
+                        type="number"
+                        value={quantity}
+                        onChange={(e) => setQuantity(e.target.value)}
+                        placeholder="Número de acciones"
+                        min="1"
+                        max={userStocks.find(s => s.symbol === symbol)?.quantity || 0}
+                    />
+                    {symbol && userStocks.find(s => s.symbol === symbol) && (
+                        <small>
+                            💼 Tienes {userStocks.find(s => s.symbol === symbol).quantity} acciones de {symbol} disponibles
+                        </small>
+                    )}
                 </div>
-                <div className="form-group">
-                  <label>Cantidad:</label>
-                  <input
-                    type="number"
-                    value={newExchange.requested_quantity}
-                    onChange={(e) => setNewExchange({...newExchange, requested_quantity: e.target.value})}
-                    min="1"
-                    required
-                  />
-                </div>
-              </div>
+
+                <button 
+                    onClick={handleCreateOffer}
+                    className="submit-btn offer"
+                    disabled={loading || !symbol || !quantity || userStocks.length === 0}
+                >
+                    {loading ? '⏳ Procesando...' : '📢 Publicar Oferta General'}
+                </button>
             </div>
 
-            <div className="form-actions">
-              <button type="submit" className="btn-primary">🚀 Enviar Propuesta</button>
-              <button type="button" onClick={() => setShowCreateForm(false)} className="btn-secondary">
-                Cancelar
-              </button>
+            {/* Lista de ofertas externas */}
+            <div className="external-offers">
+                <div className="offers-header">
+                    <h2>📋 Ofertas de Otros Grupos</h2>
+                    <div className="offers-controls">
+                        <button 
+                            onClick={loadExternalOffers}
+                            className="refresh-btn"
+                            disabled={loading}
+                        >
+                            🔄 Actualizar
+                        </button>
+                        {lastUpdate && (
+                            <span className="last-update">
+                                Última actualización: {lastUpdate.toLocaleTimeString()}
+                            </span>
+                        )}
+                    </div>
+                </div>
+                
+                <p>Responde a ofertas con propuestas dirigidas • Auto-actualización cada 10 segundos</p>
+
+                {externalOffers.length > 0 ? (
+                    <div className="offers-list">
+                        {externalOffers.map((offer, index) => (
+                            <div key={`${offer.auction_id}-${offer.proposal_id}-${index}`} className="offer-card">
+                                <div className="offer-header">
+                                    <h3>
+                                        {offer.operation === 'offer' && '📢 Oferta'}
+                                        {offer.operation === 'proposal' && '💬 Propuesta'}
+                                        {offer.operation === 'acceptance' && '✅ Aceptación'}
+                                        {offer.operation === 'rejection' && '❌ Rechazo'}
+                                        {' '}#{offer.auction_id.slice(0, 8)}...
+                                    </h3>
+                                    <span className="group-badge">Grupo {offer.group_id}</span>
+                                </div>
+                                
+                                <div className="offer-details">
+                                    <p><strong>Símbolo:</strong> {offer.symbol}</p>
+                                    <p><strong>Cantidad:</strong> {offer.quantity}</p>
+                                    <p><strong>Operación:</strong> {offer.operation}</p>
+                                    <p><strong>Timestamp:</strong> {new Date(offer.timestamp).toLocaleString()}</p>
+                                    {offer.proposal_id && (
+                                        <p><strong>Propuesta ID:</strong> {offer.proposal_id.slice(0, 8)}...</p>
+                                    )}
+                                    <p><strong>Recibido:</strong> {new Date(offer.received_at).toLocaleString()}</p>
+                                </div>
+
+                                {offer.operation === 'offer' && (
+                                    <div className="proposal-section">
+                                        {selectedOffer?.auction_id === offer.auction_id ? (
+                                            <div className="proposal-form">
+                                                <div className="offer-context">
+                                                    <h4>📝 Responder a oferta del Grupo {offer.group_id}</h4>
+                                                    <div className="context-info">
+                                                        <p><strong>Oferta recibida:</strong> {offer.quantity} acciones de {offer.symbol}</p>
+                                                        <p><strong>Tu contrapropuesta:</strong> Ofrece algo diferente a cambio</p>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div className="proposal-input-group">
+                                                    <label>Símbolo que ofreces:</label>
+                                                    <select
+                                                        value={proposalSymbol}
+                                                        onChange={(e) => setProposalSymbol(e.target.value)}
+                                                    >
+                                                        <option value="">Selecciona un símbolo que posees</option>
+                                                        {userStocks.map(stock => (
+                                                            <option key={stock.symbol} value={stock.symbol}>
+                                                                {stock.symbol} (Disponibles: {stock.quantity})
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                    {userStocks.length === 0 && (
+                                                        <small className="no-stocks-warning">
+                                                            ⚠️ No posees acciones para intercambiar. Ve a "Mis Acciones" para ver tu inventario.
+                                                        </small>
+                                                    )}
+                                                </div>
+
+                                                <div className="proposal-input-group">
+                                                    <label>Cantidad que ofreces:</label>
+                                                    <input
+                                                        type="number"
+                                                        value={proposalQuantity}
+                                                        onChange={(e) => setProposalQuantity(e.target.value)}
+                                                        placeholder="Cantidad a ofrecer"
+                                                        min="1"
+                                                        max={userStocks.find(s => s.symbol === proposalSymbol)?.quantity || 0}
+                                                    />
+                                                    {proposalSymbol && userStocks.find(s => s.symbol === proposalSymbol) && (
+                                                        <small>
+                                                            💼 Tienes {userStocks.find(s => s.symbol === proposalSymbol).quantity} acciones de {proposalSymbol} disponibles
+                                                        </small>
+                                                    )}
+                                                </div>
+
+                                                <div className="exchange-summary">
+                                                    <h5>📋 Resumen del Intercambio:</h5>
+                                                    <p><strong>Grupo {offer.group_id} ofrece:</strong> {offer.quantity} {offer.symbol}</p>
+                                                    <p><strong>Tú ofreces:</strong> {proposalQuantity || '___'} {proposalSymbol || '___'}</p>
+                                                    <small>💡 Si aceptan, recibirás {offer.quantity} {offer.symbol} y darás {proposalQuantity || '___'} {proposalSymbol || '___'}</small>
+                                                </div>
+                                                
+                                                <div className="proposal-buttons">
+                                                    <button 
+                                                        onClick={() => handleCreateProposal(offer)}
+                                                        className="propose-btn"
+                                                        disabled={loading || !proposalQuantity || !proposalSymbol}
+                                                    >
+                                                        🎯 Enviar Contrapropuesta
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => {
+                                                            setSelectedOffer(null);
+                                                            setProposalQuantity('');
+                                                            setProposalSymbol('');
+                                                        }}
+                                                        className="cancel-btn"
+                                                    >
+                                                        ❌ Cancelar
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <button 
+                                                onClick={() => setSelectedOffer(offer)}
+                                                className="respond-btn"
+                                            >
+                                                💬 Responder a esta Oferta
+                                            </button>
+                                        )}
+                                    </div>
+                                )}
+
+                                {offer.operation === 'proposal' && offer.proposal_id && (
+                                    <div className="response-section">
+                                        <div className="response-buttons">
+                                            <button 
+                                                onClick={() => handleAcceptProposal(offer)}
+                                                className="accept-btn"
+                                                disabled={loading}
+                                            >
+                                                ✅ Aceptar
+                                            </button>
+                                            <button 
+                                                onClick={() => handleRejectProposal(offer)}
+                                                className="reject-btn"
+                                                disabled={loading}
+                                            >
+                                                ❌ Rechazar
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="no-offers">
+                        <p>📭 No hay ofertas externas disponibles</p>
+                        <button 
+                            onClick={loadExternalOffers}
+                            className="refresh-btn-large"
+                        >
+                            🔄 Verificar Ofertas
+                        </button>
+                    </div>
+                )}
             </div>
-          </form>
+
+            {/* Historial de Intercambios */}
+            <div className="section">
+                <h2 className="section-title">
+                    📋 Mi Historial de Intercambios
+                    <span className="history-count">({exchangeHistory.length})</span>
+                </h2>
+                
+                {exchangeHistory.length === 0 ? (
+                    <p className="no-data">No tienes historial de intercambios aún</p>
+                ) : (
+                    <div className="history-list">
+                        {exchangeHistory.map((entry, index) => (
+                            <div key={entry.id || index} className={`history-item ${entry.type.toLowerCase()}`}>
+                                <div className="history-header">
+                                    <span className="history-type">
+                                        {entry.type === 'OFFER_CREATED' && '📢 Oferta Creada'}
+                                        {entry.type === 'PROPOSAL_SENT' && '📤 Propuesta Enviada'}
+                                        {entry.type === 'PROPOSAL_ACCEPTED' && '✅ Propuesta Aceptada'}
+                                        {entry.type === 'PROPOSAL_REJECTED' && '❌ Propuesta Rechazada'}
+                                        {entry.type === 'EXCHANGE_COMPLETED' && '🔄 Intercambio Completado'}
+                                    </span>
+                                    <span className="history-date">
+                                        {new Date(entry.timestamp).toLocaleString()}
+                                    </span>
+                                </div>
+                                
+                                <div className="history-details">
+                                    {entry.type === 'EXCHANGE_COMPLETED' ? (
+                                        <div className="exchange-completed-details">
+                                            <div className="exchange-flow">
+                                                <div className="exchange-gave">
+                                                    <span className="exchange-label">📤 Entregué:</span>
+                                                    <span className="exchange-amount">{entry.gave?.quantity} {entry.gave?.symbol}</span>
+                                                </div>
+                                                <div className="exchange-arrow">→</div>
+                                                <div className="exchange-received">
+                                                    <span className="exchange-label">📥 Recibí:</span>
+                                                    <span className="exchange-amount">{entry.received?.quantity} {entry.received?.symbol}</span>
+                                                </div>
+                                            </div>
+                                            <p><strong>Intercambio con:</strong> Grupo {entry.counterpart_group}</p>
+                                            <p><strong>Estado:</strong> {entry.status}</p>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <p><strong>Símbolo:</strong> {entry.symbol || 'N/A'}</p>
+                                            <p><strong>Cantidad:</strong> {entry.quantity || 'N/A'}</p>
+                                            <p><strong>Estado:</strong> {entry.status}</p>
+                                            {entry.target_group_id && (
+                                                <p><strong>Grupo:</strong> {entry.target_group_id}</p>
+                                            )}
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
         </div>
-      )}
-
-      {/* Tabs para pendientes e historial */}
-      <div className="exchange-tabs">
-        <button 
-          className={`tab ${activeTab === 'pending' ? 'active' : ''}`}
-          onClick={() => setActiveTab('pending')}
-        >
-          📥 Pendientes ({pendingExchanges.length})
-        </button>
-        <button 
-          className={`tab ${activeTab === 'history' ? 'active' : ''}`}
-          onClick={() => setActiveTab('history')}
-        >
-          📋 Historial ({exchangeHistory.length})
-        </button>
-      </div>
-
-      {/* Contenido de las tabs */}
-      <div className="exchanges-content">
-        {activeTab === 'pending' ? (
-          <div className="exchanges-grid">
-            {pendingExchanges.length === 0 ? (
-              <div className="no-exchanges">
-                <h3>📭 No hay intercambios pendientes</h3>
-                <p>Las propuestas aparecerán aquí cuando lleguen</p>
-              </div>
-            ) : (
-              pendingExchanges.map((exchange) => (
-                <div key={exchange.id} className="exchange-card pending">
-                  <div className="exchange-header">
-                    <h3>Intercambio #{exchange.id.slice(0, 8)}</h3>
-                    <span 
-                      className="exchange-status"
-                      style={{ backgroundColor: getStatusColor(exchange.status) }}
-                    >
-                      {getStatusIcon(exchange.status)} {exchange.status}
-                    </span>
-                  </div>
-                  
-                  <div className="exchange-details">
-                    <div className="exchange-flow">
-                      <div className="flow-side">
-                        <h4>👥 Grupo #{exchange.origin_group_id}</h4>
-                        <div className="flow-item">
-                          <span className="flow-label">Ofrece:</span>
-                          <span className="flow-value">
-                            {exchange.offered_quantity} {exchange.offered_symbol}
-                          </span>
-                        </div>
-                      </div>
-                      
-                      <div className="flow-arrow">→</div>
-                      
-                      <div className="flow-side">
-                        <h4>👥 Grupo #{exchange.target_group_id}</h4>
-                        <div className="flow-item">
-                          <span className="flow-label">Solicita:</span>
-                          <span className="flow-value">
-                            {exchange.requested_quantity} {exchange.requested_symbol}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="exchange-meta">
-                      <span>📅 {new Date(exchange.created_at).toLocaleString()}</span>
-                    </div>
-                  </div>
-
-                  {isAuthenticated && exchange.status === 'PENDING' && (
-                    <div className="exchange-actions">
-                      <button 
-                        className="btn-success"
-                        onClick={() => handleAcceptExchange(exchange.id)}
-                      >
-                        ✅ Aceptar
-                      </button>
-                      <button 
-                        className="btn-danger"
-                        onClick={() => handleRejectExchange(exchange.id)}
-                      >
-                        ❌ Rechazar
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ))
-            )}
-          </div>
-        ) : (
-          <div className="exchanges-grid">
-            {exchangeHistory.length === 0 ? (
-              <div className="no-exchanges">
-                <h3>📭 No hay historial de intercambios</h3>
-                <p>Los intercambios completados aparecerán aquí</p>
-              </div>
-            ) : (
-              exchangeHistory.map((exchange) => (
-                <div key={exchange.id} className="exchange-card history">
-                  <div className="exchange-header">
-                    <h3>Intercambio #{exchange.id.slice(0, 8)}</h3>
-                    <span 
-                      className="exchange-status"
-                      style={{ backgroundColor: getStatusColor(exchange.status) }}
-                    >
-                      {getStatusIcon(exchange.status)} {exchange.status}
-                    </span>
-                  </div>
-                  
-                  <div className="exchange-details">
-                    <div className="exchange-flow">
-                      <div className="flow-side">
-                        <h4>👥 Grupo #{exchange.origin_group_id}</h4>
-                        <div className="flow-item">
-                          <span className="flow-label">Ofreció:</span>
-                          <span className="flow-value">
-                            {exchange.offered_quantity} {exchange.offered_symbol}
-                          </span>
-                        </div>
-                      </div>
-                      
-                      <div className="flow-arrow">→</div>
-                      
-                      <div className="flow-side">
-                        <h4>👥 Grupo #{exchange.target_group_id}</h4>
-                        <div className="flow-item">
-                          <span className="flow-label">Solicitó:</span>
-                          <span className="flow-value">
-                            {exchange.requested_quantity} {exchange.requested_symbol}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="exchange-meta">
-                      <span>📅 Creado: {new Date(exchange.created_at).toLocaleString()}</span>
-                      <span>🔄 Actualizado: {new Date(exchange.updated_at).toLocaleString()}</span>
-                      {exchange.reason && (
-                        <span>💬 Motivo: {exchange.reason}</span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        )}
-      </div>
-
-      <div className="exchanges-info">
-        <h4>ℹ️ Información del Sistema</h4>
-        <ul>
-          <li><strong>RF05:</strong> ✅ Sistema completo de intercambios implementado</li>
-          <li><strong>RNF04:</strong> ✅ Recibiendo propuestas de otros grupos via MQTT</li>
-          <li><strong>RNF05:</strong> ✅ Publicando nuestras propuestas al broker automáticamente</li>
-        </ul>
-      </div>
-    </div>
-  );
+    );
 };
 
 export default Exchanges; 

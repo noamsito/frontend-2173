@@ -20,15 +20,18 @@ const Navigation = () => {
         <Link to="/my-purchases" className={isActive('/my-purchases')}>
           Mis Compras
         </Link>
+        <Link to="/mis-acciones" className={isActive('/mis-acciones')}>
+          📊 Mis Acciones
+        </Link>
         <Link to="/wallet" className={isActive('/wallet')}>
           Billetera
         </Link>
         <Link to="/event-log" className={isActive('/event-log')}>
           Registro de Eventos
         </Link>
-        <Link to="/auctions" className={isActive('/auctions')}>
+        {/* <Link to="/auctions" className={isActive('/auctions')}>
           🏛️ Subastas
-        </Link>
+        </Link> */}
         <Link to="/exchanges" className={isActive('/exchanges')}>
           🔄 Intercambios
         </Link>

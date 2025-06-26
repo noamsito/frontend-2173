@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-ro
 import { useAuth0 } from '@auth0/auth0-react';
 import { LoginButton, LogoutButton, Profile } from './components/AuthComponents';
 import Navigation from './components/Navigation';
-import SystemStatus from './components/SystemStatus'; // ← AGREGAR ESTA LÍNEA
+import SystemStatus from './components/SystemStatus';
 import TestStocks from './testStocks';
 import MyPurchases from './pages/MyPurchases';
 import PurchaseDetail from './pages/PurchaseDetail';
@@ -11,15 +11,52 @@ import StockDetail from './pages/StockDetail';
 import EventLog from './pages/EventLog';
 import Auctions from './pages/Auctions';
 import Exchanges from './pages/Exchanges';
+import MisAcciones from './pages/MisAcciones';
+import { BYPASS_AUTH } from './api/apiConfig';
 
 import './App.css';
 import './styles/purchases.css';
 import './styles/SystemStatus.css';
 import './styles/auctions.css';
-import './styles/exchanges.css'; // Cambia aquí la ruta correcta
+import './styles/exchanges.css';
+import './styles/misacciones.css';
 
 function App() {
   const { isLoading, error, isAuthenticated, user } = useAuth0();
+
+  // En modo bypass, saltamos la autenticación
+  if (BYPASS_AUTH) {
+    return (
+      <Router>
+        <div className="app-container">
+          <header className="app-header">
+            <h1>StockMarketU (Modo Prueba)</h1>
+            <Navigation />
+            <div className="user-profile">
+              <span>👤 Usuario de Prueba</span>
+            </div>
+          </header>
+          
+          <SystemStatus />
+          
+          <main>
+            <Routes>
+              <Route path="/" element={<Navigate to="/stocks" replace />} />
+              <Route path="/stocks" element={<TestStocks />} />
+              <Route path="/stocks/:symbol" element={<StockDetail />} />
+              <Route path="/my-purchases" element={<MyPurchases />} />
+              <Route path="/purchases/:id" element={<PurchaseDetail />} />
+              <Route path="/wallet" element={<Wallet />} />
+              <Route path="/event-log" element={<EventLog />} />
+              <Route path="/auctions" element={<Auctions />} />
+              <Route path="/exchanges" element={<Exchanges />} />
+              <Route path="/mis-acciones" element={<MisAcciones />} />
+            </Routes>
+          </main>
+        </div>
+      </Router>
+    );
+  }
 
   if (error) {
     return <div>¡Ups! Un error: {error.message}</div>;
@@ -57,6 +94,7 @@ function App() {
                 <Route path="/event-log" element={<EventLog />} />
                 <Route path="/auctions" element={<Auctions />} />
                 <Route path="/exchanges" element={<Exchanges />} />
+                <Route path="/mis-acciones" element={<MisAcciones />} />
               </Routes>
             </main>
           </>

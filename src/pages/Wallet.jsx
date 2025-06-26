@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { getWalletBalance, depositToWallet } from '../api/apiService';
+import { BYPASS_AUTH } from '../api/apiConfig';
 
 const Wallet = () => {
   const { user, isAuthenticated, getAccessTokenSilently } = useAuth0();
@@ -17,16 +18,17 @@ const Wallet = () => {
   const [lastDepositAmount, setLastDepositAmount] = useState('');
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated || BYPASS_AUTH) {
       fetchBalance();
     }
   }, [isAuthenticated]);
 
   const fetchBalance = async () => {
     console.log('🔍 fetchBalance - isAuthenticated:', isAuthenticated);
+    console.log('🔍 fetchBalance - BYPASS_AUTH:', BYPASS_AUTH);
     
-    if (!isAuthenticated) {
-      console.log('❌ No autenticado, no se puede obtener balance');
+    if (!isAuthenticated && !BYPASS_AUTH) {
+      console.log('❌ No autenticado y sin bypass, no se puede obtener balance');
       setLoading(false);
       return;
     }
@@ -57,7 +59,7 @@ const Wallet = () => {
   const handleDeposit = async (e) => {
     e.preventDefault();
     
-    if (!isAuthenticated) {
+    if (!isAuthenticated && !BYPASS_AUTH) {
       setError('Debes estar autenticado para hacer un depósito');
       return;
     }
@@ -77,20 +79,29 @@ const Wallet = () => {
             return;
         }
 
-        const token = await getAccessTokenSilently();
+        let token = null;
+        if (!BYPASS_AUTH) {
+            token = await getAccessTokenSilently();
+        }
+        
         const requestData = {
             amount: parseFloat(depositAmount)
         };
         
         console.log('📤 Datos a enviar:', requestData);
-        console.log('🚀 Realizando fetch con autenticación...');
+        console.log('🚀 Realizando fetch...');
+
+        const headers = {
+            'Content-Type': 'application/json',
+        };
+        
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
 
         const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/wallet/deposit`, {
             method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json',
-            },
+            headers: headers,
             body: JSON.stringify(requestData)
         });
 
@@ -164,7 +175,7 @@ const Wallet = () => {
     }
   };
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated && !BYPASS_AUTH) {
     return (
       <div className="wallet-container">
         <h2>Mi Billetera</h2>
