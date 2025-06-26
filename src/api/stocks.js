@@ -1,10 +1,14 @@
 import axios from "axios";
 import { getAuth0Client } from "../auth0-config";
-
-const API_URL = import.meta.env.VITE_API_URL;
+import { BYPASS_AUTH, API_URL } from "./apiConfig";
 
 // Para obtener el token de Auth0
 const getToken = async () => {
+  if (BYPASS_AUTH) {
+    console.log('🔧 Auth bypass enabled - skipping token');
+    return null;
+  }
+  
   try {
     const auth0 = await getAuth0Client();
     return await auth0.getTokenSilently();

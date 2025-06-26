@@ -8,10 +8,17 @@ import MyPurchases from './pages/MyPurchases';
 import PurchaseDetail from './pages/PurchaseDetail';
 import StockDetail from './pages/StockDetail';
 import EventLog from './pages/EventLog';
+import Auctions from './pages/Auctions';
+import Exchanges from './pages/Exchanges';
+import MisAcciones from './pages/MisAcciones';
+import Wallet from './pages/Wallet';
+
 import './styles/SystemStatus.css';
 import './styles/EventLog.css';
 import './styles/stock-detail.css';
-
+import './styles/auctions.css';
+import './styles/exchanges.css';
+import './styles/misacciones.css';
 
 function App() {
   const { isLoading, error, isAuthenticated, user } = useAuth0();
@@ -47,7 +54,11 @@ function App() {
                 <Route path="/stocks/:symbol" element={<StockDetail />} />
                 <Route path="/my-purchases" element={<MyPurchases />} />
                 <Route path="/purchases/:id" element={<PurchaseDetail />} />
+                <Route path="/wallet" element={<Wallet />} />
                 <Route path="/event-log" element={<EventLog />} />
+                <Route path="/auctions" element={<Auctions />} />
+                <Route path="/exchanges" element={<Exchanges />} />
+                <Route path="/mis-acciones" element={<MisAcciones />} />
               </Routes>
             </main>
           </>
