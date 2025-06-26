@@ -1,14 +1,12 @@
 // Create file: src/api/wallet.js
 import axios from "axios";
 import { getAuth0Client } from "../auth0-config";
-import { BYPASS_AUTH, API_URL } from "./apiConfig";
+
+// Configuración para master (sin bypass)
+const BYPASS_AUTH = false;
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 const getToken = async () => {
-  if (BYPASS_AUTH) {
-    console.log('🔧 Auth bypass enabled - skipping token');
-    return null;
-  }
-  
   try {
     const auth0 = await getAuth0Client();
     return await auth0.getTokenSilently();
@@ -36,20 +34,18 @@ export const getWalletBalance = async () => {
 
 export const depositToWallet = async (amount) => {
   try {
-    if (!BYPASS_AUTH) {
     // Primero, asegurarse de que el usuario esté registrado
     await registerUserIfNeeded();
-    }
     
     const token = await getToken();
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
     
     let requestBody = { amount };
     
-    if (!BYPASS_AUTH && token) {
-    // Obtener el perfil del usuario para enviar el ID de Auth0 como respaldo
-    const auth0 = await getAuth0Client();
-    const user = await auth0.getUser();
+    if (token) {
+      // Obtener el perfil del usuario para enviar el ID de Auth0 como respaldo
+      const auth0 = await getAuth0Client();
+      const user = await auth0.getUser();
       requestBody.auth0Id = user.sub; // Incluye el ID de Auth0 como respaldo
     }
     

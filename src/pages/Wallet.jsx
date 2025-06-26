@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
-import { getWalletBalance, depositToWallet } from '../api/apiService';
-import { BYPASS_AUTH } from '../api/apiConfig';
+import { getWalletBalance, depositToWallet } from '../api/wallet';
+
+// Modo bypass deshabilitado en master
+const BYPASS_AUTH = false;
 
 const Wallet = () => {
   const { user, isAuthenticated, getAccessTokenSilently } = useAuth0();
