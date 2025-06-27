@@ -94,16 +94,34 @@ export const buyStock = async (symbol, quantity) => {
 };
 
 // API de Usuario
+// ...existing code...
+
+// API de Usuario
 export const getUserProfile = async () => {
   try {
-    const headers = await getAuthHeaders();
-    const response = await axios.get(`${API_URL}/user/profile`, { headers });
-    return response.data;
-  } catch (err) {
-    console.error("Error al obtener perfil de usuario:", err);
-    throw err;
+    const token = await getToken();
+    if (!token) {
+      throw new Error('No se pudo obtener el token de autenticación');
+    }
+    
+    const response = await fetch(`${API_URL}/user/profile`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('Error obteniendo perfil de usuario');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error en getUserProfile:', error);
+    throw error;
   }
 };
+
 
 // API de Compras
 export const getUserPurchases = async () => {

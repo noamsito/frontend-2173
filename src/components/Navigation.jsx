@@ -13,6 +13,7 @@ const Navigation = () => {
       try {
         const profile = await getUserProfile();
         setUserProfile(profile);
+        console.log('Perfil de usuario:', profile); // Para debug
       } catch (error) {
         console.error('Error cargando perfil:', error);
       } finally {
@@ -33,6 +34,22 @@ const Navigation = () => {
       <div className="logo">
         <h2>StockMarketU</h2>
       </div>
+      
+      {/* Mensaje de admin prominente */}
+      {!loading && userProfile?.isAdmin && (
+        <div style={{
+          backgroundColor: '#28a745',
+          color: 'white',
+          padding: '10px 20px',
+          textAlign: 'center',
+          fontWeight: 'bold',
+          marginBottom: '10px',
+          borderRadius: '5px'
+        }}>
+          🔑 ERES ADMIN
+        </div>
+      )}
+      
       <div className="nav-links">
         <Link to="/stocks" className={isActive('/stocks')}>
           Acciones
