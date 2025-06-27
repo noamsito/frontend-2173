@@ -82,3 +82,31 @@ export const getPurchaseEstimation = async (purchaseId) => {
     throw err;
   }
 };
+
+// Revender acciones (solo para administradores)
+export const resellStock = async (purchaseId, quantity, discount_percentage, token) => {
+  try {
+    console.log("📡 Revendiendo acciones:", { purchaseId, quantity, discount_percentage });
+    
+    const headers = token ? {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    } : {};
+    
+    const response = await axios.post(
+      `${API_URL}/admin/stocks/resale`,
+      {
+        purchase_id: purchaseId,
+        quantity: quantity,
+        discount_percentage: discount_percentage || 0
+      },
+      { headers }
+    );
+    
+    console.log("✅ Reventa exitosa:", response.data);
+    return response.data;
+  } catch (err) {
+    console.error("❌ Error al revender:", err);
+    throw err;
+  }
+};

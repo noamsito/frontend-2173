@@ -301,10 +301,28 @@ export default function TestStocks() {
                 <div className="stocks-list">
                     <div className="stocks-grid">
                         {stocks.map((stock) => (
-                            <div key={stock.id} className="stock-card">
+                            <div 
+                                key={stock.id}  
+                                className="stock-card"
+                                data-resale={stock.stock_type === 'resale'}
+                            >
                                 <div className="stock-header">
                                     <div className="stock-symbol">{stock.symbol}</div>
-                                    <div className="stock-price">${stock.price.toLocaleString()}</div>
+                                    <div className="stock-price price-container">
+                                        {stock.stock_type === 'resale' && stock.original_price && (
+                                            <span className="original-price-crossed">
+                                                ${stock.original_price.toLocaleString()}
+                                            </span>
+                                        )}
+                                        <span className="current-price">
+                                            ${stock.price.toLocaleString()}
+                                        </span>
+                                        {stock.stock_type === 'resale' && stock.discount_percentage > 0 && (
+                                            <span className="discount-badge">
+                                                -{stock.discount_percentage}%
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
                                 
                                 <div className="stock-content">
@@ -329,8 +347,22 @@ export default function TestStocks() {
                                         </div>
                                         <div className="detail-row">
                                             <span className="label">💹 Valor de mercado:</span>
-                                            <span className="value">
-                                                ${(stock.price * stock.quantity).toLocaleString()}
+                                            <span className="value price-container">
+                                                {/* Mostrar precio original del valor de mercado si es reventa */}
+                                                {stock.stock_type === 'resale' && stock.original_price && (
+                                                    <span className="original-price-crossed">
+                                                        ${(stock.original_price * stock.quantity).toLocaleString()}
+                                                    </span>
+                                                )}
+                                                <span className="current-price">
+                                                    ${(stock.price * stock.quantity).toLocaleString()}
+                                                </span>
+                                                {/* Badge de ahorro total */}
+                                                {stock.stock_type === 'resale' && stock.original_price && (
+                                                    <span className="savings-badge">
+                                                        Ahorro: ${((stock.original_price - stock.price) * stock.quantity).toLocaleString()}
+                                                    </span>
+                                                )}
                                             </span>
                                         </div>
                                     </div>

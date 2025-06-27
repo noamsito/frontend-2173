@@ -54,27 +54,9 @@ const Navigation = () => {
         <Link to="/stocks" className={isActive('/stocks')}>
           Acciones
         </Link>
-        <div className="nav-link-container">
-          <Link to="/my-purchases" className={isActive('/my-purchases')}>
-            Mis Compras
-          </Link>
-          {!loading && userProfile?.isAdmin && (
-            <span 
-              className="admin-badge" 
-              style={{
-                color: 'black',
-                backgroundColor: '#28a745',
-                fontSize: '10px',
-                padding: '2px 6px',
-                borderRadius: '8px',
-                marginTop: '2px',
-                fontWeight: '500'
-              }}
-            >
-              Administrador
-            </span>
-          )}
-        </div>
+        <Link to="/my-purchases" className={isActive('/my-purchases')}>
+          Mis Compras
+        </Link>
         <Link to="/event-log" className={isActive('/event-log')}>
           Registro de Eventos
         </Link>
