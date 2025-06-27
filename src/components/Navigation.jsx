@@ -1,8 +1,28 @@
 import { Link, useLocation } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { getUserProfile } from '../api/apiService';
 
 const Navigation = () => {
   const location = useLocation();
-  
+  const [userProfile, setUserProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // Cargar perfil del usuario al montar el componente
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const profile = await getUserProfile();
+        setUserProfile(profile);
+      } catch (error) {
+        console.error('Error cargando perfil:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
+
   // Determinar qué enlace está activo
   const isActive = (path) => {
     return location.pathname === path ? 'active' : '';
@@ -17,9 +37,27 @@ const Navigation = () => {
         <Link to="/stocks" className={isActive('/stocks')}>
           Acciones
         </Link>
-        <Link to="/my-purchases" className={isActive('/my-purchases')}>
-          Mis Compras
-        </Link>
+        <div className="nav-link-container">
+          <Link to="/my-purchases" className={isActive('/my-purchases')}>
+            Mis Compras
+          </Link>
+          {!loading && userProfile?.isAdmin && (
+            <span 
+              className="admin-badge" 
+              style={{
+                color: 'black',
+                backgroundColor: '#28a745',
+                fontSize: '10px',
+                padding: '2px 6px',
+                borderRadius: '8px',
+                marginTop: '2px',
+                fontWeight: '500'
+              }}
+            >
+              Administrador
+            </span>
+          )}
+        </div>
         <Link to="/event-log" className={isActive('/event-log')}>
           Registro de Eventos
         </Link>
