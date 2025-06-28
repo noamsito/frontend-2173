@@ -40,7 +40,7 @@ const MisAcciones = () => {
 
         try {
             setLoading(true);
-            const response = await makeAuthenticatedRequest('http://localhost:3000/admin/my-stocks');
+            const response = await makeAuthenticatedRequest('http://localhost:3000/my-stocks');
             
             if (response.ok) {
                 const data = await response.json();
@@ -118,9 +118,6 @@ const MisAcciones = () => {
         <div className="mis-acciones-container">
             <div className="header">
                 <h1>📊 Mis Acciones</h1>
-                <div className="admin-notice">
-                    🔐 <strong>Funcionalidad de Administrador:</strong> Solo usuarios administradores pueden ver el inventario.
-                </div>
                 <p className="subtitle">Tu inventario completo de acciones</p>
                 <div className="stats">
                     <div className="stat-card">
@@ -222,7 +219,6 @@ const MisAcciones = () => {
                     <ul>
                         <li>✅ Acciones compradas directamente</li>
                         <li>✅ Acciones recibidas por intercambios</li>
-                        <li>✅ Acciones ganadas en subastas</li>
                         <li>✅ Cualquier acción que actualmente poseas</li>
                     </ul>
                     <p><strong>Cálculo automático:</strong> Tu inventario se calcula en tiempo real sumando todas las transacciones positivas y restando las entregas/ventas.</p>

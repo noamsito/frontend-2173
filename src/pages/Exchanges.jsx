@@ -46,7 +46,7 @@ const Exchanges = () => {
         }
 
         try {
-            const response = await makeAuthenticatedRequest('http://localhost:3000/admin/my-stocks');
+            const response = await makeAuthenticatedRequest('http://localhost:3000/my-stocks');
             if (response.ok) {
                 const data = await response.json();
                 console.log('📦 Inventario real recibido desde MIS ACCIONES:', data);
@@ -232,65 +232,92 @@ const Exchanges = () => {
         }
     };
 
-    // Aceptar o rechazar propuesta
+    // Aceptar propuesta
     const handleAcceptProposal = async (proposal) => {
+        // ✨ NUEVO: Remover inmediatamente la propuesta del estado local
+        setExternalOffers(prevOffers => 
+            prevOffers.filter(offer => 
+                !(offer.auction_id === proposal.auction_id && 
+                  offer.proposal_id === proposal.proposal_id)
+            )
+        );
+        
+        // Mostrar mensaje inmediato
+        alert(`✅ ¡Propuesta aceptada! Intercambio: ${proposal.quantity} ${proposal.symbol}`);
+        
         setLoading(true);
         try {
+            // Ejecutar en segundo plano
             const response = await makeAuthenticatedRequest('http://localhost:3000/admin/auctions/respond', {
                 method: 'POST',
                 body: JSON.stringify({
                     auction_id: proposal.auction_id,
                     proposal_id: proposal.proposal_id,
                     action: 'accept',
-                    symbol: proposal.symbol, // Mantener símbolo de la propuesta
-                    quantity: proposal.quantity // Mantener cantidad de la propuesta
+                    symbol: proposal.symbol,
+                    quantity: proposal.quantity
                 })
             });
 
             if (response.ok) {
                 const result = await response.json();
-                console.log('✅ Propuesta aceptada:', result);
-                alert(`¡Propuesta aceptada! Intercambio: ${proposal.quantity} ${proposal.symbol}`);
-                await loadExternalOffers(); // Actualizar lista
-                await fetchExchangeHistory(); // Actualizar historial
-                await fetchUserStocks(); // Actualizar inventario
+                console.log('✅ Propuesta aceptada (confirmación backend):', result);
+                
+                // Actualizar datos en segundo plano
+                await fetchExchangeHistory();
+                await fetchUserStocks();
             } else {
-                throw new Error(`Error ${response.status}`);
+                console.error('Error en backend al aceptar propuesta');
+                // La propuesta ya se removió visualmente, no es necesario hacer nada más
             }
         } catch (error) {
             console.error('Error aceptando propuesta:', error);
-            alert('Error al aceptar la propuesta');
+            // La propuesta ya se removió visualmente, no es necesario hacer nada más
         } finally {
             setLoading(false);
         }
     };
 
+    // Rechazar propuesta
     const handleRejectProposal = async (proposal) => {
+        // ✨ NUEVO: Remover inmediatamente la propuesta del estado local
+        setExternalOffers(prevOffers => 
+            prevOffers.filter(offer => 
+                !(offer.auction_id === proposal.auction_id && 
+                  offer.proposal_id === proposal.proposal_id)
+            )
+        );
+        
+        // Mostrar mensaje inmediato
+        alert(`❌ Propuesta rechazada: ${proposal.quantity} ${proposal.symbol}`);
+        
         setLoading(true);
         try {
+            // Ejecutar en segundo plano
             const response = await makeAuthenticatedRequest('http://localhost:3000/admin/auctions/respond', {
                 method: 'POST',
                 body: JSON.stringify({
                     auction_id: proposal.auction_id,
                     proposal_id: proposal.proposal_id,
                     action: 'reject',
-                    symbol: proposal.symbol, // Mantener símbolo de la propuesta
-                    quantity: proposal.quantity // Mantener cantidad de la propuesta
+                    symbol: proposal.symbol,
+                    quantity: proposal.quantity
                 })
             });
 
             if (response.ok) {
                 const result = await response.json();
-                console.log('✅ Propuesta rechazada:', result);
-                alert(`Propuesta rechazada: ${proposal.quantity} ${proposal.symbol}`);
-                await loadExternalOffers(); // Actualizar lista
-                await fetchExchangeHistory(); // Actualizar historial
+                console.log('✅ Propuesta rechazada (confirmación backend):', result);
+                
+                // Actualizar historial en segundo plano
+                await fetchExchangeHistory();
             } else {
-                throw new Error(`Error ${response.status}`);
+                console.error('Error en backend al rechazar propuesta');
+                // La propuesta ya se removió visualmente, no es necesario hacer nada más
             }
         } catch (error) {
             console.error('Error rechazando propuesta:', error);
-            alert('Error al rechazar la propuesta');
+            // La propuesta ya se removió visualmente, no es necesario hacer nada más
         } finally {
             setLoading(false);
         }
