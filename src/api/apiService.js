@@ -25,9 +25,6 @@ const getAuthHeaders = async () => {
 };
 
 // API de Stocks
-
-// Modificar la función getStocks para aceptar filtros
-
 export const getStocks = async (params = {}) => {
   try {
     const headers = await getAuthHeaders();
@@ -87,9 +84,6 @@ export const buyStock = async (symbol, quantity) => {
   }
 };
 
-// API de Usuario
-// ...existing code...
-
 // API de Usuario y Wallet
 export const getUserProfile = async () => {
   try {
@@ -116,6 +110,21 @@ export const getUserProfile = async () => {
   }
 };
 
+ export const getWalletBalance = async () => {
+  try {
+    const token = await getToken();
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    
+    const response = await axios.get(
+      `${API_URL}/wallet/balance`,
+      { headers }
+    );
+    return response.data;
+  } catch (err) {
+    console.error("Error fetching wallet balance:", err);
+    return { balance: 0 };
+  }
+};
 
 // API de Compras
 export const getUserPurchases = async () => {

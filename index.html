@@ -9,12 +9,13 @@
     <!-- New Relic Browser Monitoring -->
     <script type="text/javascript">
     ;(function(config,d,s,c,i,u,z,p,l){
-        // Configuración de New Relic (reemplazar con valores reales)
+        // Configuración de New Relic usando solo las variables disponibles
         config.accountId='%VITE_NEW_RELIC_ACCOUNT_ID%';
         config.trustKey='%VITE_NEW_RELIC_TRUST_KEY%';
-        config.agentID='%VITE_NEW_RELIC_AGENT_ID%';
         config.licenseKey='%VITE_NEW_RELIC_LICENSE_KEY%';
-        config.applicationID='%VITE_NEW_RELIC_APPLICATION_ID%';
+        
+        // agentID y applicationID son opcionales y se generan automáticamente
+        // si no se especifican
         
         // Configuración específica para StockMarketU
         config.customAttributes = {
