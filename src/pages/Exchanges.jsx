@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { apiConfig } from '../api/apiConfig';
+import { useNewRelicMonitoring } from '../utils/newrelic';
 import '../styles/exchanges.css';
 
 const Exchanges = () => {
@@ -15,47 +16,18 @@ const Exchanges = () => {
     const [exchangeHistory, setExchangeHistory] = useState([]);
     const [userStocks, setUserStocks] = useState([]);
 
-    // Función para obtener las acciones que posee el usuario
-    const fetchUserStocks = async () => {
-        try {
-            const response = await fetch('http://localhost:3000/admin/my-stocks');
-            if (response.ok) {
-                const data = await response.json();
-                console.log('📦 Inventario real recibido desde MIS ACCIONES:', data);
-                
-                if (data.status === 'success' && data.stocks) {
-                    // Los datos ya vienen procesados desde el backend
-                    setUserStocks(data.stocks);
-                    console.log('📊 Acciones disponibles (inventario real):', data.stocks);
-                } else {
-                    console.error('Error en respuesta del inventario:', data);
-                    setUserStocks([]);
-                }
-            } else {
-                console.error('Error HTTP al obtener inventario:', response.status, response.statusText);
-                setUserStocks([]);
-            }
-        } catch (error) {
-            console.error('Error fetching user stocks:', error);
-            setUserStocks([]);
-        }
-    };
-
-    // Función para obtener historial de intercambios
-    const fetchExchangeHistory = async () => {
-        try {
-            const response = await fetch('http://localhost:3000/admin/exchange-history');
-            if (response.ok) {
-                const data = await response.json();
-                setExchangeHistory(data.history || []);
-            }
-        } catch (error) {
-            console.error('Error fetching exchange history:', error);
-        }
-    };
+    // Hook de monitoreo de New Relic
+    const { trackExchange, trackAPI, trackError, trackPageView } = useNewRelicMonitoring();
 
     useEffect(() => {
-        // Cargar ofertas al inicializar
+        // Trackear vista de página
+        trackPageView('ExchangesPage', null);
+        
+        // TRAZA FUNCIONAL 2: Inicio de visualización de ofertas
+        trackExchange('view_offers', {
+            timestamp: new Date().toISOString()
+        });
+        
         loadExternalOffers();
         fetchExchangeHistory();
         fetchUserStocks();
@@ -70,41 +42,161 @@ const Exchanges = () => {
         return () => clearInterval(interval);
     }, []);
 
+    // Función para obtener las acciones que posee el usuario
+    const fetchUserStocks = async () => {
+        const startTime = Date.now();
+        
+        try {
+            const response = await fetch('http://localhost:3000/admin/my-stocks');
+            
+            // Trackear llamada a API
+            trackAPI('/admin/my-stocks', 'GET', startTime, response, null);
+            
+            if (response.ok) {
+                const data = await response.json();
+                console.log('📦 Inventario real recibido desde MIS ACCIONES:', data);
+                
+                if (data.status === 'success' && data.stocks) {
+                    setUserStocks(data.stocks);
+                    console.log('📊 Acciones disponibles (inventario real):', data.stocks);
+                    
+                    // Trackear éxito en carga de inventario
+                    trackExchange('view_offers', {
+                        userStocksCount: data.stocks.length,
+                        action: 'inventory_loaded',
+                        success: true
+                    });
+                } else {
+                    console.error('Error en respuesta del inventario:', data);
+                    setUserStocks([]);
+                }
+            } else {
+                console.error('Error HTTP al obtener inventario:', response.status, response.statusText);
+                setUserStocks([]);
+            }
+        } catch (error) {
+            // Trackear error de API
+            trackAPI('/admin/my-stocks', 'GET', startTime, null, error);
+            trackError('fetch_user_stocks_error', error.message);
+            
+            console.error('Error fetching user stocks:', error);
+            setUserStocks([]);
+        }
+    };
+
+    // Función para obtener historial de intercambios
+    const fetchExchangeHistory = async () => {
+        const startTime = Date.now();
+        
+        try {
+            const response = await fetch('http://localhost:3000/admin/exchange-history');
+            
+            // Trackear llamada a API
+            trackAPI('/admin/exchange-history', 'GET', startTime, response, null);
+            
+            if (response.ok) {
+                const data = await response.json();
+                setExchangeHistory(data.history || []);
+            }
+        } catch (error) {
+            // Trackear error de API
+            trackAPI('/admin/exchange-history', 'GET', startTime, null, error);
+            trackError('fetch_exchange_history_error', error.message);
+            
+            console.error('Error fetching exchange history:', error);
+        }
+    };
+
     const loadExternalOffers = async () => {
+        const startTime = Date.now();
+        
         try {
             const response = await fetch(`${apiConfig.baseURL}/admin/external-offers`, {
                 headers: apiConfig.getHeaders()
             });
+            
+            // Trackear llamada a API
+            trackAPI('/admin/external-offers', 'GET', startTime, response, null);
+            
             const data = await response.json();
             if (data.status === 'success') {
                 setExternalOffers(data.offers);
                 setLastUpdate(new Date());
+                
+                // TRAZA FUNCIONAL 2: Ofertas externas cargadas
+                trackExchange('view_offers', {
+                    externalOffersCount: data.offers.length,
+                    action: 'external_offers_loaded',
+                    success: true
+                });
             }
         } catch (error) {
+            // Trackear error de API
+            trackAPI('/admin/external-offers', 'GET', startTime, null, error);
+            trackError('load_external_offers_error', error.message);
+            
             console.error('Error al cargar ofertas externas:', error);
         }
     };
 
     // Crear oferta general
     const handleCreateOffer = async () => {
+        const startTime = Date.now();
+        
         if (!symbol || !quantity) {
-            setMessage('⚠️ Por favor, completa todos los campos');
+            const errorMsg = 'Por favor, completa todos los campos';
+            setMessage(`⚠️ ${errorMsg}`);
+            
+            // Trackear error de validación
+            trackExchange('create_offer', {
+                symbol: symbol,
+                quantity: quantity,
+                validationResult: 'missing_fields',
+                errorMessage: errorMsg
+            });
             return;
         }
 
         // Verificar que el usuario tiene suficientes acciones del símbolo seleccionado
         const userStock = userStocks.find(stock => stock.symbol === symbol);
         if (!userStock) {
-            alert(`No posees acciones de ${symbol}`);
+            const errorMsg = `No posees acciones de ${symbol}`;
+            alert(errorMsg);
+            
+            // Trackear error de validación
+            trackExchange('create_offer', {
+                symbol: symbol,
+                quantity: quantity,
+                validationResult: 'insufficient_stock',
+                errorMessage: errorMsg
+            });
             return;
         }
         
         if (parseInt(quantity) > userStock.quantity) {
-            alert(`Solo posees ${userStock.quantity} acciones de ${symbol}. No puedes ofrecer ${quantity}.`);
+            const errorMsg = `Solo posees ${userStock.quantity} acciones de ${symbol}. No puedes ofrecer ${quantity}.`;
+            alert(errorMsg);
+            
+            // Trackear error de validación
+            trackExchange('create_offer', {
+                symbol: symbol,
+                quantity: quantity,
+                validationResult: 'insufficient_quantity',
+                errorMessage: errorMsg,
+                availableQuantity: userStock.quantity
+            });
             return;
         }
 
         setLoading(true);
+        
+        // TRAZA FUNCIONAL 2: Creación de oferta
+        trackExchange('create_offer', {
+            symbol: symbol,
+            quantity: parseInt(quantity),
+            offerType: 'general'
+        });
+        
         try {
             const response = await fetch('http://localhost:3000/admin/auctions/offer', {
                 method: 'POST',
@@ -117,10 +209,22 @@ const Exchanges = () => {
                 })
             });
 
+            // Trackear llamada a API
+            trackAPI('/admin/auctions/offer', 'POST', startTime, response, null);
+
             if (response.ok) {
                 const result = await response.json();
                 setMessage(`✅ ${result.message}`);
                 console.log('🎯 Oferta creada:', result.auction);
+                
+                // TRAZA FUNCIONAL 2: Oferta creada exitosamente
+                trackExchange('create_offer', {
+                    symbol: symbol,
+                    quantity: parseInt(quantity),
+                    success: true,
+                    auctionId: result.auction?.id,
+                    duration: Date.now() - startTime
+                });
                 
                 // Limpiar formulario
                 setSymbol('');
@@ -131,9 +235,29 @@ const Exchanges = () => {
                 await fetchExchangeHistory();
             } else {
                 const errorData = await response.json();
-                setMessage(`❌ ${errorData.error}`);
+                const errorMsg = errorData.error;
+                setMessage(`❌ ${errorMsg}`);
+                
+                // Trackear error
+                trackExchange('exchange_error', {
+                    errorType: 'create_offer_failed',
+                    errorMessage: errorMsg,
+                    symbol: symbol,
+                    quantity: parseInt(quantity),
+                    duration: Date.now() - startTime
+                });
             }
         } catch (error) {
+            // Trackear error de API
+            trackAPI('/admin/auctions/offer', 'POST', startTime, null, error);
+            trackExchange('exchange_error', {
+                errorType: 'create_offer_network_error',
+                errorMessage: error.message,
+                symbol: symbol,
+                quantity: parseInt(quantity),
+                duration: Date.now() - startTime
+            });
+            
             console.error('Error:', error);
             setMessage('❌ Error de conexión');
         } finally {
@@ -143,8 +267,18 @@ const Exchanges = () => {
 
     // Crear propuesta como respuesta a una oferta existente
     const handleCreateProposal = async (originalOffer) => {
+        const startTime = Date.now();
+        
         if (!proposalQuantity || !proposalSymbol) {
             alert('Por favor completa el símbolo y la cantidad');
+            
+            // Trackear error de validación
+            trackExchange('create_proposal', {
+                proposalSymbol: proposalSymbol,
+                proposalQuantity: proposalQuantity,
+                validationResult: 'missing_fields',
+                targetAuctionId: originalOffer.auction_id
+            });
             return;
         }
 
@@ -152,15 +286,41 @@ const Exchanges = () => {
         const userStock = userStocks.find(stock => stock.symbol === proposalSymbol);
         if (!userStock) {
             alert(`No posees acciones de ${proposalSymbol}`);
+            
+            // Trackear error de validación
+            trackExchange('create_proposal', {
+                proposalSymbol: proposalSymbol,
+                proposalQuantity: proposalQuantity,
+                validationResult: 'insufficient_stock',
+                targetAuctionId: originalOffer.auction_id
+            });
             return;
         }
         
         if (parseInt(proposalQuantity) > userStock.quantity) {
             alert(`Solo posees ${userStock.quantity} acciones de ${proposalSymbol}. No puedes ofrecer ${proposalQuantity}.`);
+            
+            // Trackear error de validación
+            trackExchange('create_proposal', {
+                proposalSymbol: proposalSymbol,
+                proposalQuantity: proposalQuantity,
+                validationResult: 'insufficient_quantity',
+                availableQuantity: userStock.quantity,
+                targetAuctionId: originalOffer.auction_id
+            });
             return;
         }
 
         setLoading(true);
+        
+        // TRAZA FUNCIONAL 2: Creación de propuesta
+        trackExchange('create_proposal', {
+            proposalSymbol: proposalSymbol,
+            proposalQuantity: parseInt(proposalQuantity),
+            targetAuctionId: originalOffer.auction_id,
+            targetGroup: originalOffer.group_id
+        });
+        
         try {
             const response = await fetch('http://localhost:3000/admin/auctions/proposal', {
                 method: 'POST',
@@ -168,17 +328,31 @@ const Exchanges = () => {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    symbol: proposalSymbol, // Usar el símbolo seleccionado
+                    symbol: proposalSymbol,
                     quantity: parseInt(proposalQuantity),
                     auction_id: originalOffer.auction_id,
                     target_group_id: originalOffer.group_id
                 })
             });
 
+            // Trackear llamada a API
+            trackAPI('/admin/auctions/proposal', 'POST', startTime, response, null);
+
             if (response.ok) {
                 const result = await response.json();
                 console.log('✅ Propuesta creada:', result);
                 alert(`¡Contrapropuesta enviada! Ofreces ${proposalQuantity} ${proposalSymbol} por ${originalOffer.quantity} ${originalOffer.symbol}`);
+                
+                // TRAZA FUNCIONAL 2: Propuesta creada exitosamente
+                trackExchange('create_proposal', {
+                    proposalSymbol: proposalSymbol,
+                    proposalQuantity: parseInt(proposalQuantity),
+                    targetAuctionId: originalOffer.auction_id,
+                    targetGroup: originalOffer.group_id,
+                    success: true,
+                    proposalId: result.proposal_id,
+                    duration: Date.now() - startTime
+                });
                 
                 // Limpiar formulario
                 setSelectedOffer(null);
@@ -192,6 +366,17 @@ const Exchanges = () => {
                 throw new Error(`Error ${response.status}`);
             }
         } catch (error) {
+            // Trackear error de API
+            trackAPI('/admin/auctions/proposal', 'POST', startTime, null, error);
+            trackExchange('exchange_error', {
+                errorType: 'create_proposal_error',
+                errorMessage: error.message,
+                proposalSymbol: proposalSymbol,
+                proposalQuantity: parseInt(proposalQuantity),
+                targetAuctionId: originalOffer.auction_id,
+                duration: Date.now() - startTime
+            });
+            
             console.error('Error enviando propuesta:', error);
             alert('Error al enviar la contrapropuesta');
         } finally {
@@ -201,7 +386,18 @@ const Exchanges = () => {
 
     // Aceptar o rechazar propuesta
     const handleAcceptProposal = async (proposal) => {
+        const startTime = Date.now();
         setLoading(true);
+        
+        // TRAZA FUNCIONAL 2: Respuesta a propuesta
+        trackExchange('respond_to_proposal', {
+            auctionId: proposal.auction_id,
+            proposalId: proposal.proposal_id,
+            action: 'accept',
+            symbol: proposal.symbol,
+            quantity: proposal.quantity
+        });
+        
         try {
             const response = await fetch('http://localhost:3000/admin/auctions/respond', {
                 method: 'POST',
@@ -212,22 +408,46 @@ const Exchanges = () => {
                     auction_id: proposal.auction_id,
                     proposal_id: proposal.proposal_id,
                     action: 'accept',
-                    symbol: proposal.symbol, // Mantener símbolo de la propuesta
-                    quantity: proposal.quantity // Mantener cantidad de la propuesta
+                    symbol: proposal.symbol,
+                    quantity: proposal.quantity
                 })
             });
+
+            // Trackear llamada a API
+            trackAPI('/admin/auctions/respond', 'POST', startTime, response, null);
 
             if (response.ok) {
                 const result = await response.json();
                 console.log('✅ Propuesta aceptada:', result);
                 alert(`¡Propuesta aceptada! Intercambio: ${proposal.quantity} ${proposal.symbol}`);
-                await loadExternalOffers(); // Actualizar lista
-                await fetchExchangeHistory(); // Actualizar historial
-                await fetchUserStocks(); // Actualizar inventario
+                
+                // TRAZA FUNCIONAL 2: Intercambio completado exitosamente
+                trackExchange('exchange_success', {
+                    exchangeType: 'proposal_accepted',
+                    auctionId: proposal.auction_id,
+                    proposalId: proposal.proposal_id,
+                    symbol: proposal.symbol,
+                    quantity: proposal.quantity,
+                    duration: Date.now() - startTime
+                });
+                
+                await loadExternalOffers();
+                await fetchExchangeHistory();
+                await fetchUserStocks();
             } else {
                 throw new Error(`Error ${response.status}`);
             }
         } catch (error) {
+            // Trackear error de API
+            trackAPI('/admin/auctions/respond', 'POST', startTime, null, error);
+            trackExchange('exchange_error', {
+                errorType: 'accept_proposal_error',
+                errorMessage: error.message,
+                auctionId: proposal.auction_id,
+                proposalId: proposal.proposal_id,
+                duration: Date.now() - startTime
+            });
+            
             console.error('Error aceptando propuesta:', error);
             alert('Error al aceptar la propuesta');
         } finally {
@@ -236,7 +456,18 @@ const Exchanges = () => {
     };
 
     const handleRejectProposal = async (proposal) => {
+        const startTime = Date.now();
         setLoading(true);
+        
+        // TRAZA FUNCIONAL 2: Respuesta a propuesta
+        trackExchange('respond_to_proposal', {
+            auctionId: proposal.auction_id,
+            proposalId: proposal.proposal_id,
+            action: 'reject',
+            symbol: proposal.symbol,
+            quantity: proposal.quantity
+        });
+        
         try {
             const response = await fetch('http://localhost:3000/admin/auctions/respond', {
                 method: 'POST',
@@ -247,21 +478,46 @@ const Exchanges = () => {
                     auction_id: proposal.auction_id,
                     proposal_id: proposal.proposal_id,
                     action: 'reject',
-                    symbol: proposal.symbol, // Mantener símbolo de la propuesta
-                    quantity: proposal.quantity // Mantener cantidad de la propuesta
+                    symbol: proposal.symbol,
+                    quantity: proposal.quantity
                 })
             });
+
+            // Trackear llamada a API
+            trackAPI('/admin/auctions/respond', 'POST', startTime, response, null);
 
             if (response.ok) {
                 const result = await response.json();
                 console.log('✅ Propuesta rechazada:', result);
                 alert(`Propuesta rechazada: ${proposal.quantity} ${proposal.symbol}`);
-                await loadExternalOffers(); // Actualizar lista
-                await fetchExchangeHistory(); // Actualizar historial
+                
+                // Trackear respuesta de rechazo
+                trackExchange('respond_to_proposal', {
+                    auctionId: proposal.auction_id,
+                    proposalId: proposal.proposal_id,
+                    action: 'reject',
+                    symbol: proposal.symbol,
+                    quantity: proposal.quantity,
+                    success: true,
+                    duration: Date.now() - startTime
+                });
+                
+                await loadExternalOffers();
+                await fetchExchangeHistory();
             } else {
                 throw new Error(`Error ${response.status}`);
             }
         } catch (error) {
+            // Trackear error de API
+            trackAPI('/admin/auctions/respond', 'POST', startTime, null, error);
+            trackExchange('exchange_error', {
+                errorType: 'reject_proposal_error',
+                errorMessage: error.message,
+                auctionId: proposal.auction_id,
+                proposalId: proposal.proposal_id,
+                duration: Date.now() - startTime
+            });
+            
             console.error('Error rechazando propuesta:', error);
             alert('Error al rechazar la propuesta');
         } finally {
@@ -564,4 +820,4 @@ const Exchanges = () => {
     );
 };
 
-export default Exchanges; 
+export default Exchanges;

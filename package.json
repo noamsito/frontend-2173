@@ -1,16 +1,19 @@
 {
   "name": "frontend-2173",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "newrelic:test": "node scripts/test-newrelic.js",
+    "verify-rnf01": "node scripts/verify-rnf01.js"
   },
   "dependencies": {
     "@auth0/auth0-react": "^2.3.0",
+    "@newrelic/browser": "^1.0.0",
     "amqplib": "^0.10.8",
     "axios": "^1.8.4",
     "react": "^19.0.0",
@@ -27,5 +30,15 @@
     "eslint-plugin-react-refresh": "^0.4.19",
     "globals": "^16.0.0",
     "vite": "^6.3.1"
+  },
+  "newrelic": {
+    "description": "Configuración de New Relic para StockMarketU Frontend",
+    "traces": [
+      "stock_purchase_flow",
+      "exchange_flow"
+    ],
+    "alerts": [
+      "availability_heartbeat"
+    ]
   }
 }

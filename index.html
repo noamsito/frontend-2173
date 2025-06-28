@@ -2,11 +2,73 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <!-- Cambia esta línea para usar tu nueva imagen -->
     <link rel="icon" type="public/png" href="/transaction.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- Cambia el título aquí -->
     <title>StockMarketU</title>
+    
+    <!-- New Relic Browser Monitoring -->
+    <script type="text/javascript">
+    ;(function(config,d,s,c,i,u,z,p,l){
+        // Configuración de New Relic (reemplazar con valores reales)
+        config.accountId='%VITE_NEW_RELIC_ACCOUNT_ID%';
+        config.trustKey='%VITE_NEW_RELIC_TRUST_KEY%';
+        config.agentID='%VITE_NEW_RELIC_AGENT_ID%';
+        config.licenseKey='%VITE_NEW_RELIC_LICENSE_KEY%';
+        config.applicationID='%VITE_NEW_RELIC_APPLICATION_ID%';
+        
+        // Configuración específica para StockMarketU
+        config.customAttributes = {
+            'application': 'StockMarketU-Frontend',
+            'environment': window.location.hostname === 'localhost' ? 'development' : 'production',
+            'version': '1.0.0'
+        };
+        
+        // Habilitar características de monitoring
+        config.enableCustomEvents = true;
+        config.enablePageAction = true;
+        config.enableAjaxEvents = true;
+        config.enableSessionTrace = true;
+        config.enableSpa = true;
+        config.errorBeacon = true;
+        config.enableErrorHandling = true;
+        config.enablePerformanceTimings = true;
+        config.enableResourceTimings = true;
+        config.enableNavigationTimings = true;
+        
+        // Cargar el script de New Relic
+        (d.head||d.getElementsByTagName('head')[0]).appendChild((function(){
+            var o=d.createElement('script');
+            o.async=true;
+            o.src='https://js-agent.newrelic.com/nr-loader-spa-1.latest.min.js';
+            return o;
+        })());
+        
+        window.NREUM=config;
+        
+        // Inicializar cuando esté listo
+        if (window.addEventListener) {
+            window.addEventListener('load', function() {
+                if (window.newrelic) {
+                    console.log('🔍 New Relic Browser Agent cargado');
+                    
+                    // Configurar atributos iniciales
+                    window.newrelic.setCustomAttribute('loadTime', performance.now());
+                    window.newrelic.setCustomAttribute('userAgent', navigator.userAgent);
+                    window.newrelic.setCustomAttribute('viewport', window.innerWidth + 'x' + window.innerHeight);
+                    window.newrelic.setCustomAttribute('referrer', document.referrer);
+                    
+                    // Evento de aplicación iniciada
+                    window.newrelic.addPageAction('Application_Started', {
+                        timestamp: new Date().toISOString(),
+                        loadTime: performance.now(),
+                        url: window.location.href,
+                        initialPageLoad: true
+                    });
+                }
+            });
+        }
+    })(window.NREUM||(window.NREUM={}),document,'script');
+    </script>
   </head>
   <body>
     <div id="root"></div>
