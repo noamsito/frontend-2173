@@ -1,0 +1,382 @@
+/* New Relic Monitor Component Styles */
+.newrelic-monitor {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+  position: relative;
+}
+
+.newrelic-monitor::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px 12px 0 0;
+}
+
+.newrelic-monitor.disabled {
+  opacity: 0.6;
+  background: #f8f9fa;
+}
+
+/* Header */
+.monitor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #f1f3f4;
+}
+
+.monitor-header h3 {
+  margin: 0;
+  color: #1a365d;
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.status-badge {
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  color: white;
+  animation: pulse 2s infinite;
+}
+
+.status-badge.healthy {
+  background-color: #10b981;
+}
+
+.status-badge.degraded {
+  background-color: #f59e0b;
+}
+
+.status-badge.unhealthy {
+  background-color: #ef4444;
+}
+
+.status-badge.disabled {
+  background-color: #6b7280;
+  animation: none;
+}
+
+.dashboard-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.dashboard-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+/* Metrics Grid */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.metric-card {
+  background: #f8f9fa;
+  border-radius: 10px;
+  padding: 1.2rem;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.metric-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+}
+
+.metric-card.stock-purchases::before {
+  background: linear-gradient(90deg, #10b981, #48bb78);
+}
+
+.metric-card.exchanges::before {
+  background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+}
+
+.metric-card.api-calls::before {
+  background: linear-gradient(90deg, #8b5cf6, #7c3aed);
+}
+
+.metric-card.availability::before {
+  background: linear-gradient(90deg, #f59e0b, #d97706);
+}
+
+.metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+  border-color: #e2e8f0;
+}
+
+.metric-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.metric-header h4 {
+  margin: 0;
+  color: #374151;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.metric-total {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  padding: 0.3rem 0.8rem;
+  border-radius: 15px;
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.metric-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.metric-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.3rem 0;
+}
+
+.metric-row span:first-child {
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.metric-row span:last-child {
+  font-weight: 600;
+  color: #374151;
+}
+
+.metric-row .success {
+  color: #10b981;
+  font-weight: bold;
+}
+
+.metric-row .error {
+  color: #ef4444;
+  font-weight: bold;
+}
+
+.success-rate {
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background: #f0f9ff;
+  border-radius: 6px;
+  border-left: 3px solid #3b82f6;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1e40af;
+}
+
+.status {
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+/* Real-time Activity */
+.realtime-activity {
+  background: #f8f9fa;
+  border-radius: 10px;
+  padding: 1rem;
+  border: 1px solid #e2e8f0;
+}
+
+.realtime-activity h4 {
+  margin: 0 0 1rem 0;
+  color: #374151;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.no-activity {
+  text-align: center;
+  color: #6b7280;
+  font-style: italic;
+  padding: 1rem;
+}
+
+.activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.activity-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  transition: all 0.2s ease;
+}
+
+.activity-item:hover {
+  transform: translateX(5px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.activity-time {
+  font-size: 0.8rem;
+  color: #6b7280;
+  min-width: 70px;
+  font-family: monospace;
+}
+
+.activity-action {
+  font-weight: 600;
+  color: #374151;
+  min-width: 150px;
+}
+
+.activity-details {
+  font-size: 0.85rem;
+  color: #6b7280;
+  flex: 1;
+}
+
+/* Animations */
+@keyframes pulse {
+  0%, 100% { 
+    opacity: 1; 
+  }
+  50% { 
+    opacity: 0.7; 
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.newrelic-monitor {
+  animation: fadeIn 0.6s ease-out;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .newrelic-monitor {
+    padding: 1rem;
+  }
+  
+  .monitor-header {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+  
+  .header-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .dashboard-btn {
+    width: 100%;
+    text-align: center;
+  }
+  
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .metric-header {
+    flex-direction: column;
+    gap: 0.5rem;
+    text-align: center;
+  }
+  
+  .activity-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .activity-time {
+    min-width: auto;
+  }
+  
+  .activity-action {
+    min-width: auto;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .newrelic-monitor {
+    background: #1f2937;
+    border-color: #374151;
+  }
+  
+  .monitor-header h4,
+  .metric-header h4,
+  .realtime-activity h4 {
+    color: #f9fafb;
+  }
+  
+  .metric-card {
+    background: #374151;
+  }
+  
+  .activity-item {
+    background: #374151;
+    border-color: #4b5563;
+  }
+  
+  .realtime-activity {
+    background: #374151;
+    border-color: #4b5563;
+  }
+}

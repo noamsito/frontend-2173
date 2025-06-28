@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getStocks, getWalletBalance, buyStock } from "./api/apiService";
-import "./styles/stocks.css"; // ← AGREGAR ESTA LÍNEA
+import { useNewRelicMonitoring } from './utils/newrelic';
+import "./styles/stocks.css";
 
 export default function TestStocks() {
     const [stocks, setStocks] = useState([]);
@@ -14,7 +15,7 @@ export default function TestStocks() {
     const [purchaseLoading, setPurchaseLoading] = useState({});
     const [purchaseMessage, setPurchaseMessage] = useState('');
     
-    // Nuevos estados para filtros
+    // Estados para filtros
     const [filters, setFilters] = useState({
         symbol: '',
         name: '',
@@ -33,12 +34,26 @@ export default function TestStocks() {
         return saved ? parseFloat(saved) : 0;
     });
 
+    // Hook de New Relic
+    const { trackStockPurchase, trackAPI, trackError, trackPageView } = useNewRelicMonitoring();
+
     useEffect(() => {
+        // TRAZA FUNCIONAL 1: Trackear visualización de stocks (inicio del flujo)
+        trackPageView('StocksListPage', performance.now());
+        trackStockPurchase('view_stocks', {
+            page: page,
+            count: count,
+            filtersApplied: Object.values(filters).some(f => f !== ''),
+            stockCount: stocks.length
+        });
+
         fetchStocks();
         fetchUserBalance();
     }, [page, count]);
 
     const fetchStocks = async (applyFilters = false) => {
+        const startTime = Date.now();
+        
         try {
             setLoading(true);
             
@@ -48,7 +63,7 @@ export default function TestStocks() {
                 setPage(1);
             }
             
-            // Construir parámetros de filtrado - Modificación para manejar valores vacíos mejor
+            // Construir parámetros de filtrado
             const params = {
                 page: currentPage,
                 count: count
@@ -64,9 +79,32 @@ export default function TestStocks() {
             if (filters.date) params.date = filters.date;
             
             const data = await getStocks(params);
+            
+            // Trackear llamada exitosa a API
+            trackAPI('/stocks', 'GET', startTime, { ok: true, status: 200 }, null);
+            
             setStocks(data.data || []);
             setError('');
+
+            // TRAZA FUNCIONAL 1: Trackear stocks cargados exitosamente
+            trackStockPurchase('view_stocks', {
+                page: currentPage,
+                count: count,
+                filtersApplied: applyFilters,
+                stockCount: data.data?.length || 0,
+                success: true,
+                duration: Date.now() - startTime
+            });
+            
         } catch (err) {
+            // Trackear error en API
+            trackAPI('/stocks', 'GET', startTime, null, err);
+            trackError('fetch_stocks_error', err.message, {
+                page: page,
+                count: count,
+                filtersApplied: applyFilters
+            });
+            
             setError('Error al cargar los stocks. Por favor, intenta de nuevo.');
             console.error(err);
         } finally {
@@ -74,39 +112,109 @@ export default function TestStocks() {
         }
     };
 
-    // FUNCIÓN: Obtener saldo del usuario
     const fetchUserBalance = async () => {
+        const startTime = Date.now();
+        
         try {
             console.log('📡 testStocks - Llamando a getWalletBalance()...');
             const data = await getWalletBalance();
+            
+            // Trackear llamada exitosa a API
+            trackAPI('/wallet/balance', 'GET', startTime, { ok: true, status: 200 }, null);
+            
             console.log('✅ testStocks - Respuesta:', data);
             const balance = data.balance || 0;
             console.log('💰 testStocks - Actualizando balance a:', balance);
             setUserBalance(balance);
-            // Guardar en localStorage
             localStorage.setItem('walletBalance', balance.toString());
         } catch (error) {
+            // Trackear error en API
+            trackAPI('/wallet/balance', 'GET', startTime, null, error);
+            trackError('fetch_balance_error', error.message);
+            
             console.error('❌ testStocks - Error al obtener saldo:', error);
-            console.error('❌ testStocks - Error response:', error.response);
-            // NO poner en 0 si hay error
-            // setUserBalance(0);
         }
     };
 
-    // NUEVA FUNCIÓN: Manejar compras
+    // Función mejorada para manejar selección de stock
+    const handleStockSelection = (stock) => {
+        // TRAZA FUNCIONAL 1: Trackear selección de stock específico
+        trackStockPurchase('select_stock', {
+            symbol: stock.symbol,
+            price: stock.price,
+            availableQuantity: stock.quantity,
+            stockName: stock.long_name
+        });
+    };
+
+    // Función mejorada para manejar cambio de cantidad
+    const handleQuantityChange = (symbol, quantity) => {
+        setSelectedQuantities(prev => ({
+            ...prev,
+            [symbol]: quantity
+        }));
+
+        // TRAZA FUNCIONAL 1: Trackear configuración de cantidad
+        const stock = stocks.find(s => s.symbol === symbol);
+        if (stock) {
+            trackStockPurchase('set_quantity', {
+                symbol: symbol,
+                quantity: quantity,
+                totalCost: stock.price * quantity,
+                userBalance: userBalance,
+                stockPrice: stock.price
+            });
+        }
+    };
+
+    // Función principal de compra con tracking completo
     const handlePurchase = async (stock) => {
+        const startTime = Date.now();
         const quantity = selectedQuantities[stock.symbol] || 1;
         const totalCost = stock.price * quantity;
         
-        // Validaciones
+        // TRAZA FUNCIONAL 1: Trackear inicio de validación
+        trackStockPurchase('validate_purchase', {
+            symbol: stock.symbol,
+            quantity: quantity,
+            totalCost: totalCost,
+            userBalance: userBalance,
+            availableStock: stock.quantity
+        });
+        
+        // Validaciones con tracking específico
         if (quantity > stock.quantity) {
-            setPurchaseMessage(`❌ Solo hay ${stock.quantity} acciones disponibles de ${stock.symbol}`);
+            const errorMsg = `Solo hay ${stock.quantity} acciones disponibles de ${stock.symbol}`;
+            
+            // Trackear error de validación
+            trackStockPurchase('purchase_error', {
+                symbol: stock.symbol,
+                quantity: quantity,
+                errorType: 'insufficient_stock',
+                errorMessage: errorMsg,
+                duration: Date.now() - startTime
+            });
+            
+            setPurchaseMessage(`❌ ${errorMsg}`);
             setTimeout(() => setPurchaseMessage(''), 5000);
             return;
         }
 
         if (userBalance < totalCost) {
-            setPurchaseMessage(`❌ Saldo insuficiente. Necesitas $${totalCost.toLocaleString()} pero tienes $${userBalance.toLocaleString()}`);
+            const errorMsg = `Saldo insuficiente. Necesitas $${totalCost.toLocaleString()} pero tienes $${userBalance.toLocaleString()}`;
+            
+            // Trackear error de validación
+            trackStockPurchase('purchase_error', {
+                symbol: stock.symbol,
+                quantity: quantity,
+                errorType: 'insufficient_funds',
+                errorMessage: errorMsg,
+                requiredAmount: totalCost,
+                availableBalance: userBalance,
+                duration: Date.now() - startTime
+            });
+            
+            setPurchaseMessage(`❌ ${errorMsg}`);
             setTimeout(() => setPurchaseMessage(''), 5000);
             return;
         }
@@ -114,8 +222,20 @@ export default function TestStocks() {
         setPurchaseLoading(prev => ({ ...prev, [stock.symbol]: true }));
         setPurchaseMessage('');
 
+        // TRAZA FUNCIONAL 1: Trackear ejecución de compra
+        trackStockPurchase('execute_purchase', {
+            symbol: stock.symbol,
+            quantity: quantity,
+            totalCost: totalCost,
+            userBalance: userBalance
+        });
+
         try {
+            const apiStartTime = Date.now();
             const result = await buyStock(stock.symbol, quantity);
+            
+            // Trackear llamada exitosa a API de compra
+            trackAPI('/stocks/buy', 'POST', apiStartTime, { ok: true, status: 200 }, null);
             
             if (result.requiresPayment && result.webpayUrl) {
                 // Si requiere pago con WebPay, redirigir
@@ -131,18 +251,39 @@ export default function TestStocks() {
                     [stock.symbol]: 1
                 }));
                 
+                // TRAZA FUNCIONAL 1: Trackear compra exitosa
+                trackStockPurchase('purchase_success', {
+                    symbol: stock.symbol,
+                    quantity: quantity,
+                    totalCost: totalCost,
+                    requestId: result.request_id,
+                    newBalance: userBalance - totalCost,
+                    duration: Date.now() - startTime
+                });
+                
                 setPurchaseMessage(
                     `✅ Compra exitosa: ${quantity} acciones de ${stock.symbol} por $${totalCost.toLocaleString()}`
                 );
                 
                 setTimeout(() => {
                     fetchStocks();
-                    fetchUserBalance(); // Refrescar saldo desde el servidor
+                    fetchUserBalance();
                     setPurchaseMessage('');
                 }, 2000);
-                
             }
         } catch (error) {
+            // Trackear error en API de compra
+            trackAPI('/stocks/buy', 'POST', Date.now(), null, error);
+            
+            // Trackear error de compra
+            trackStockPurchase('purchase_error', {
+                symbol: stock.symbol,
+                quantity: quantity,
+                errorType: 'api_error',
+                errorMessage: error.message,
+                duration: Date.now() - startTime
+            });
+            
             console.error('Error en compra:', error);
             setPurchaseMessage(`❌ Error de conexión: ${error.message}`);
             setTimeout(() => setPurchaseMessage(''), 5000);
@@ -169,10 +310,25 @@ export default function TestStocks() {
     
     const handleApplyFilters = (e) => {
         e.preventDefault();
+        
+        // Trackear aplicación de filtros
+        trackStockPurchase('view_stocks', {
+            action: 'filters_applied',
+            filters: filters,
+            hasSymbolFilter: !!filters.symbol,
+            hasPriceFilter: !!(filters.minPrice || filters.maxPrice),
+            hasQuantityFilter: !!(filters.minQuantity || filters.maxQuantity)
+        });
+        
         fetchStocks(true);
     };
     
     const handleResetFilters = () => {
+        // Trackear reset de filtros
+        trackStockPurchase('view_stocks', {
+            action: 'filters_reset'
+        });
+        
         setFilters({
             symbol: '',
             name: '',
@@ -182,30 +338,21 @@ export default function TestStocks() {
             maxQuantity: '',
             date: ''
         });
-        // Esperar al siguiente ciclo para que los inputs se actualicen
         setTimeout(() => fetchStocks(true), 0);
-    };
-
-    // Función para manejar cambio de cantidad
-    const handleQuantityChange = (symbol, quantity) => {
-        setSelectedQuantities(prev => ({
-            ...prev,
-            [symbol]: quantity
-        }));
     };
 
     return (
         <div className="stocks-container">
             <h2>📈 Listado de Stocks Disponibles</h2>
             
-            {/* NUEVO: Mensaje de compras */}
+            {/* Mensaje de compras */}
             {purchaseMessage && (
                 <div className={`purchase-message ${purchaseMessage.includes('✅') ? 'success' : 'error'}`}>
                     {purchaseMessage}
                 </div>
             )}
             
-            {/* SECCIÓN DE BILLETERA */}
+            {/* Sección de billetera */}
             <div className="wallet-section" style={{
                 background: '#f8f9fa',
                 padding: '15px',
@@ -226,6 +373,7 @@ export default function TestStocks() {
                 </div>
             </div>
             
+            {/* Sección de filtros */}
             <div className="filters-section">
                 <div className="filters-header">
                     <div className="count-filter">
@@ -384,7 +532,7 @@ export default function TestStocks() {
                             <tr>
                                 <th>Símbolo</th>
                                 <th>Nombre</th>
-                                <th>🛒 Comprar</th> {/* ← Esta debería usar la misma clase que las otras */}
+                                <th>🛒 Comprar</th>
                                 <th>Precio</th>
                                 <th>Cantidad</th>
                                 <th>Fecha</th>
@@ -397,7 +545,6 @@ export default function TestStocks() {
                                     <td>{stock.symbol}</td>
                                     <td>{stock.long_name}</td>
                                     
-                                    {/* ← Usar la misma clase que las otras celdas */}
                                     <td>
                                         <div style={{
                                             display: 'flex',
@@ -407,7 +554,10 @@ export default function TestStocks() {
                                         }}>
                                             <button
                                                 className="view-button"
-                                                onClick={() => handlePurchase(stock)}
+                                                onClick={() => {
+                                                    handleStockSelection(stock);
+                                                    handlePurchase(stock);
+                                                }}
                                                 disabled={purchaseLoading[stock.symbol] || stock.quantity === 0 || userBalance < (stock.price * (selectedQuantities[stock.symbol] || 1))}
                                                 title={`Comprar ${selectedQuantities[stock.symbol] || 1} acciones de ${stock.symbol}`}
                                             >
@@ -444,7 +594,11 @@ export default function TestStocks() {
                                     <td>{stock.quantity}</td>
                                     <td>{new Date(stock.timestamp).toLocaleDateString()}</td>
                                     <td>
-                                        <Link to={`/stocks/${stock.symbol}`} className="view-button">
+                                        <Link 
+                                            to={`/stocks/${stock.symbol}`} 
+                                            className="view-button"
+                                            onClick={() => handleStockSelection(stock)}
+                                        >
                                             Ver detalles
                                         </Link>
                                     </td>
