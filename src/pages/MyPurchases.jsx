@@ -24,7 +24,7 @@ const MyPurchases = () => {
   // Verificar si el usuario es admin
   const isAdmin = () => {
     return user && (
-      user['https://stockmarketu.com/roles']?.includes('admin') ||
+      user['https://stockmarket-api/roles']?.includes('admin') ||
       user.email === 'antonio@uc.cl' //Hardcodeado para testing
     );
   };
@@ -54,7 +54,10 @@ const MyPurchases = () => {
       // Obtener token de acceso
       let token = null;
       try {
-        token = await getAccessTokenSilently();
+        token = await getAccessTokenSilently({
+            audience: 'https://stockmarket-api/',
+            scope: 'openid profile email'
+        });
         console.log("🔑 Token obtenido exitosamente"); // DEBUG
       } catch (tokenError) {
         console.warn('Error obteniendo token de acceso:', tokenError);
@@ -108,7 +111,10 @@ const MyPurchases = () => {
 
     try {
       setResaleLoading(true);
-      const token = await getAccessTokenSilently();
+      const token = await getAccessTokenSilently({
+          audience: 'https://stockmarket-api/',
+          scope: 'openid profile email'
+      });
       
       await resellStock(selectedPurchase.id, quantity, discount, token);
       

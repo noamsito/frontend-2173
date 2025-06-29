@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { getStockBySymbol, buyStock } from '../api/apiService';
+import { useAuth0 } from '@auth0/auth0-react';
 import '../styles/stock-detail.css';
 
 const StockDetail = () => {
@@ -14,6 +15,7 @@ const StockDetail = () => {
   const [buyingStatus, setBuyingStatus] = useState({ loading: false, error: '', success: '' });
   const [retryData, setRetryData] = useState(null);
   const [redirectingToWebpay, setRedirectingToWebpay] = useState(false);
+  const { getAccessTokenSilently } = useAuth0();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -44,6 +46,10 @@ const StockDetail = () => {
     
         // Obtener datos del stock
         const stockData = await getStockBySymbol(symbol);
+        console.log('📊 DEBUG: Raw response from backend:', stockData);
+        console.log('📊 DEBUG: stockData.data:', stockData.data);
+        console.log('📊 DEBUG: typeof stockData.data:', typeof stockData.data);
+        console.log('📊 DEBUG: Array.isArray(stockData.data):', Array.isArray(stockData.data));
         setStock(stockData.data);
     
         // Manejo de parámetros de retorno WebPay
@@ -97,9 +103,9 @@ const StockDetail = () => {
   }, [symbol, searchParams, navigate]);
 
   const handleBuy = async () => {
-    if (!stock || stock.length === 0) return;
+    if (!stock) return;
     
-    const stockItem = stock[0];
+    const stockItem = stock;
     const totalCost = stockItem.price * quantity;
     
     // Validaciones básicas
@@ -261,7 +267,7 @@ const StockDetail = () => {
     );
   }
 
-  if (!stock || stock.length === 0) {
+  if (!stock) {
     return (
       <div className="stock-detail-container">
         <button onClick={() => navigate('/stocks')} className="btn btn-secondary back-button">
@@ -275,7 +281,7 @@ const StockDetail = () => {
     );
   }
 
-  const stockItem = stock[0];
+  const stockItem = stock;
   const totalCost = stockItem.price * quantity;
   const maxQuantity = stockItem.quantity;
 
@@ -286,7 +292,7 @@ const StockDetail = () => {
       </button>
       
       <div className="stock-detail-header">
-        <div className="stock-symbol-badge">{symbol}</div>
+        <div className="stock-symbol-badge">{stockItem.original_symbol || symbol.replace('_r', '')}</div>
         <h1>{stockItem.long_name}</h1>
       </div>
       
@@ -295,15 +301,40 @@ const StockDetail = () => {
       <div className="stock-details">
         <div className="stock-info-card">
           <h3>Información del Stock</h3>
+          {stockItem.is_resale && (
+            <div className="resale-indicator">
+              🏷️ <strong>Oferta Especial - {stockItem.discount_percentage}% descuento</strong>
+            </div>
+          )}
           <div className="info-grid">
             <div className="info-item">
               <span className="label">Precio actual:</span>
-              <span className="value price">${stockItem.price.toLocaleString()}</span>
+              <span className="value price-container">
+                {stockItem.is_resale && stockItem.original_price && (
+                  <span className="original-price-crossed">
+                    ${stockItem.original_price.toLocaleString()}
+                  </span>
+                )}
+                <span className="price">${stockItem.price.toLocaleString()}</span>
+                {stockItem.is_resale && stockItem.discount_percentage > 0 && (
+                  <span className="discount-badge">
+                    -{stockItem.discount_percentage}%
+                  </span>
+                )}
+              </span>
             </div>
             <div className="info-item">
               <span className="label">Cantidad disponible:</span>
               <span className="value quantity">{stockItem.quantity.toLocaleString()}</span>
             </div>
+            {stockItem.is_resale && stockItem.original_price && (
+              <div className="info-item highlight">
+                <span className="label">Ahorro por acción:</span>
+                <span className="value savings">
+                  ${(stockItem.original_price - stockItem.price).toLocaleString()}
+                </span>
+              </div>
+            )}
             <div className="info-item">
               <span className="label">Última actualización:</span>
               <span className="value date">{new Date(stockItem.timestamp).toLocaleString()}</span>
@@ -357,12 +388,27 @@ const StockDetail = () => {
               <div className="cost-breakdown">
                 <div className="cost-row">
                   <span>Precio por acción:</span>
-                  <span>${stockItem.price.toLocaleString()}</span>
+                  <span className="price-container">
+                    {stockItem.is_resale && stockItem.original_price && (
+                      <span className="original-price-crossed">
+                        ${stockItem.original_price.toLocaleString()}
+                      </span>
+                    )}
+                    <span>${stockItem.price.toLocaleString()}</span>
+                  </span>
                 </div>
                 <div className="cost-row">
                   <span>Cantidad:</span>
                   <span>{quantity.toLocaleString()}</span>
                 </div>
+                {stockItem.is_resale && stockItem.original_price && (
+                  <div className="cost-row savings-row">
+                    <span>Ahorro total:</span>
+                    <span className="savings">
+                      ${((stockItem.original_price - stockItem.price) * quantity).toLocaleString()}
+                    </span>
+                  </div>
+                )}
                 <div className="cost-row total">
                   <span>Total a pagar:</span>
                   <span>${totalCost.toLocaleString()}</span>

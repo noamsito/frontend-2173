@@ -23,6 +23,7 @@ export const getUserPurchases = async (token = null) => {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json'
     } : {};
+    console.log("📡 Headers enviados:", headers); // DEBUG
     
     const response = await axios.get(
       //`${API_URL}/api/purchases/user/${userId}`,

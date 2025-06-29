@@ -7,7 +7,12 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 const getToken = async () => {
   try {
     const auth0 = await getAuth0Client();
-    return await auth0.getTokenSilently();
+    const token = await auth0.getTokenSilently({
+      audience: 'https://stockmarket-api/',
+      scope: 'openid profile email',
+      cacheMode: 'off' // Opcional: forzar token fresco
+    });
+    return token;
   } catch (error) {
     console.error("Error obteniendo token:", error);
     return null;
@@ -164,6 +169,29 @@ export const getEvents = async (page = 1, count = 25, type = 'ALL') => {
     return { data: events };
   } catch (err) {
     console.error("Error al obtener eventos:", err);
+    throw err;
+  }
+};
+
+export const updateResaleDiscount = async (resaleId, discountPercentage) => {
+  try {
+    console.log('🔧 API DEBUG: updateResaleDiscount called');
+    console.log('🔧 API DEBUG: resaleId:', resaleId);
+    console.log('🔧 API DEBUG: discountPercentage:', discountPercentage);
+    const headers = await getAuthHeaders();
+    console.log('🔧 API DEBUG: headers:', headers);
+    const response = await axios.patch(
+      `${API_URL}/admin/stocks/resale/${resaleId}`,
+      { discount_percentage: discountPercentage },
+      { headers }
+    );
+    return response.data;
+  } catch (err) {
+    console.error(`❌ API ERROR: updating discount for ${resaleId}:`, err);
+    console.error('❌ API ERROR response:', err.response?.data);
+    console.error('❌ API ERROR status:', err.response?.status);
+    console.error('❌ API ERROR headers:', err.response?.headers);
+    console.error(`Error al actualizar descuento para ${resaleId}:`, err);
     throw err;
   }
 };
