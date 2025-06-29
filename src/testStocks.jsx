@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { getStocks } from "./api/apiService";
+import { useAuth0 } from "@auth0/auth0-react";
+import { getStocks, updateResaleDiscount } from "./api/apiService";
 import "./styles/stocks.css";
 
 export default function TestStocks() {
+    const { user, isAuthenticated, isLoading, getAccessTokenSilently } = useAuth0();
     const [stocks, setStocks] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -24,15 +26,46 @@ export default function TestStocks() {
         maxQuantity: '',
         date: ''
     });
+
+    // Estados para edición de descuento
+    const [editingDiscount, setEditingDiscount] = useState(null);
+    const [newDiscount, setNewDiscount] = useState('');
+    const [updatingDiscount, setUpdatingDiscount] = useState(false);
     const [showFilters, setShowFilters] = useState(false);
 
+    const isAdmin = () => {
+        return user && (
+            user['https://stockmarket-api/roles']?.includes('admin') ||
+            user.email === 'antonio@uc.cl'
+        );
+    };
+
     useEffect(() => {
+        if (!isLoading && isAuthenticated) {
         fetchStocks();
-    }, [page, count]);
+        }
+    }, [page, count, isAuthenticated, isLoading]);
 
     const fetchStocks = async (applyFilters = false) => {
         try {
+            if (!isAuthenticated) {
+                setError('Debes iniciar sesión para ver los stocks');
+                return;
+            }
+
             setLoading(true);
+            let token = null;
+            
+            try {
+                token = await getAccessTokenSilently({
+                    audience: 'https://stockmarket-api/',
+                    scope: 'openid profile email'
+                });
+                console.log('🔑 DEBUG: Token obtenido en testStocks:', token ? 'SÍ' : 'NO');
+                console.log('🔑 DEBUG: Token:', token);
+            } catch (tokenError) {
+                console.error('❌ DEBUG: Error obteniendo token:', tokenError);
+            }
             
             const currentPage = applyFilters ? 1 : page;
             if (applyFilters) {
@@ -52,8 +85,8 @@ export default function TestStocks() {
             if (filters.minQuantity) params.minQuantity = filters.minQuantity;
             if (filters.maxQuantity) params.maxQuantity = filters.maxQuantity;
             if (filters.date) params.date = filters.date;
-            
-            const data = await getStocks(params);
+
+            const data = await getStocks(params, token);
             setStocks(data.data || []);
             setError('');
         } catch (err) {
@@ -105,6 +138,50 @@ export default function TestStocks() {
             date: ''
         });
         setTimeout(() => fetchStocks(true), 0);
+    };
+
+    // Funciones para manejo de descuento
+    const handleDiscountEdit = (stock) => {
+        setEditingDiscount(stock.symbol);
+        setNewDiscount(stock.discount_info?.discount_percentage || '');
+    };
+
+    const handleDiscountCancel = () => {
+        setEditingDiscount(null);
+        setNewDiscount('');
+    };
+
+    const handleDiscountUpdate = async (stock) => {
+        console.log('🔧 DEBUG: handleDiscountUpdate called');
+        console.log('🔧 DEBUG: stock object:', stock);
+        console.log('🔧 DEBUG: newDiscount:', newDiscount);
+        if (!newDiscount || newDiscount < 0 || newDiscount > 10) {
+            showMessage('El descuento debe estar entre 0% y 10%', 'error');
+            return;
+        }
+
+        try {
+            setUpdatingDiscount(true);
+            
+            // Extraer resale_id del símbolo (quitar el '_r')
+            const resaleId = stock.purchase_id
+
+            const result = await updateResaleDiscount(resaleId, parseFloat(newDiscount));
+            
+            showMessage(`Descuento actualizado: ${result.data.old_discount}% → ${result.data.new_discount}%`, 'success');
+            
+            // Actualizar la lista de stocks
+            await fetchStocks();
+            
+            // Cerrar modal
+            setEditingDiscount(null);
+            setNewDiscount('');
+            
+        } catch (err) {
+            showMessage(err.response?.data?.error || 'Error al actualizar descuento', 'error');
+        } finally {
+            setUpdatingDiscount(false);
+        }
     };
 
     return (
@@ -300,11 +377,41 @@ export default function TestStocks() {
             {stocks.length > 0 && (
                 <div className="stocks-list">
                     <div className="stocks-grid">
-                        {stocks.map((stock) => (
-                            <div key={stock.id} className="stock-card">
+                        {stocks
+                            .filter(stock => {
+                                if (isAdmin()) {
+                                    // Los admins ven todos los stocks
+                                    return true;
+                                } else {
+                                    // Los usuarios normales solo ven reventas
+                                    return stock.symbol.endsWith('_r');
+                                }
+                            })
+                            
+                            .map((stock) => (
+                            
+                            <div 
+                                key={stock.symbol}  
+                                className="stock-card"
+                                data-resale={stock.symbol.endsWith('_r')}
+                            >
                                 <div className="stock-header">
                                     <div className="stock-symbol">{stock.symbol}</div>
-                                    <div className="stock-price">${stock.price.toLocaleString()}</div>
+                                    <div className="stock-price price-container">
+                                        {stock.symbol.endsWith('_r') && stock.discount_info?.original_price && (
+                                            <span className="original-price-crossed">
+                                                ${stock.discount_info.original_price.toLocaleString()}
+                                            </span>
+                                        )}
+                                        <span className="current-price">
+                                            ${stock.price.toLocaleString()}
+                                        </span>
+                                        {stock.symbol.endsWith('_r') && stock.discount_info?.discount_percentage > 0 && (
+                                            <span className="discount-badge">
+                                                -{stock.discount_info.discount_percentage}%
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
                                 
                                 <div className="stock-content">
@@ -329,8 +436,22 @@ export default function TestStocks() {
                                         </div>
                                         <div className="detail-row">
                                             <span className="label">💹 Valor de mercado:</span>
-                                            <span className="value">
-                                                ${(stock.price * stock.quantity).toLocaleString()}
+                                            <span className="value price-container">
+                                                {/* Mostrar precio original del valor de mercado si es reventa */}
+                                                {stock.symbol.endsWith('_r') && stock.discount_info?.original_price && (
+                                                    <span className="original-price-crossed">
+                                                        ${(stock.discount_info.original_price * stock.quantity).toLocaleString()}
+                                                    </span>
+                                                )}
+                                                <span className="current-price">
+                                                    ${(stock.price * stock.quantity).toLocaleString()}
+                                                </span>
+                                                {/* Badge de ahorro total */}
+                                                {stock.symbol.endsWith('_r') && stock.discount_info?.original_price && (
+                                                    <span className="savings-badge">
+                                                        Ahorro: ${((stock.discount_info.original_price - stock.price) * stock.quantity).toLocaleString()}
+                                                    </span>
+                                                )}
                                             </span>
                                         </div>
                                     </div>
@@ -349,7 +470,57 @@ export default function TestStocks() {
                                     >
                                         📊 Ver Detalles
                                     </Link>
+
+                                    {/* Botón de cambiar descuento solo para admins y reventas */}
+                                    {isAdmin() && stock.symbol.endsWith('_r') && (
+                                        <button
+                                            onClick={() => handleDiscountEdit(stock)}
+                                            className="btn btn-admin"
+                                            disabled={editingDiscount === stock.symbol}
+                                        >
+                                            🔧 Cambiar Descuento
+                                        </button>
+                                    )}
                                 </div>
+                                {/* Modal de edición de descuento */}
+                                {editingDiscount === stock.symbol && (
+                                    <div className="discount-modal">
+                                        <div className="discount-modal-content">
+                                            <h4>💰 Cambiar Descuento</h4>
+                                            <p>{stock.long_name}</p>
+                                            <div className="discount-input-group">
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    max="10"
+                                                    step="0.1"
+                                                    value={newDiscount}
+                                                    onChange={(e) => setNewDiscount(e.target.value)}
+                                                    placeholder="% de descuento"
+                                                    disabled={updatingDiscount}
+                                                    autoFocus
+                                                />
+                                                <span className="discount-symbol">%</span>
+                                            </div>
+                                            <div className="discount-actions">
+                                                <button
+                                                    onClick={handleDiscountCancel}
+                                                    className="btn btn-cancel"
+                                                    disabled={updatingDiscount}
+                                                >
+                                                    ❌ Cancelar
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDiscountUpdate(stock)}
+                                                    className="btn btn-confirm"
+                                                    disabled={updatingDiscount || !newDiscount}
+                                                >
+                                                    {updatingDiscount ? '⏳ Actualizando...' : '✅ Cambiar'}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         ))}
                     </div>
@@ -363,7 +534,14 @@ export default function TestStocks() {
                             ← Anterior
                         </button>
                         <span className="page-info">
-                            📄 Página {page} • {stocks.length} elementos
+                            📄 Página {page} • {
+                                stocks.filter(stock => isAdmin() || stock.symbol.endsWith('_r')).length
+                            } elementos mostrados
+                            {!isAdmin() && (
+                                <span className="filter-info">
+                                    {" "}(solo ofertas especiales)
+                                </span>
+                            )}
                         </span>
                         <button 
                             onClick={handleNextPage} 

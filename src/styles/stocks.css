@@ -265,6 +265,7 @@
     height: 4px;
     background: var(--gray-300);
     transition: background var(--transition-fast);
+    z-index: 1;
   }
   
   .stock-card:hover {
@@ -308,6 +309,14 @@
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
+
+  .stock-price.price-container {
+    background: none;
+    -webkit-background-clip: unset;
+    -webkit-text-fill-color: unset;
+    background-clip: unset;
+    color: unset;
+}
   
   /* ================================
      CONTENIDO DE TARJETA DE STOCK
@@ -557,3 +566,301 @@
       gap: var(--spacing-1);
     }
   }
+
+  .price-container {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.original-price-crossed {
+    color: #999 !important;
+    text-decoration: line-through;
+    font-size: 0.85em;
+    font-weight: normal;
+    margin-right: 6px;
+    background: none !important;
+    -webkit-background-clip: unset !important;
+    -webkit-text-fill-color: #999 !important;
+    background-clip: unset !important;
+}
+
+.current-price {
+    font-weight: 600;
+    color: var(--success) !important;
+    background: none !important;
+    -webkit-background-clip: unset !important;
+    -webkit-text-fill-color: var(--success) !important;
+    background-clip: unset !important;
+}
+
+.discount-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #2196F3, #1976D2);
+    color: white !important;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75em;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    animation: fadeInScale 0.3s ease-out;
+    box-shadow: 0 2px 4px rgba(33, 150, 243, 0.3);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    -webkit-text-fill-color: white !important;
+}
+
+.savings-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #4CAF50, #388E3C);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 0.7em;
+    font-weight: 600;
+    margin-left: 4px;
+}
+
+/* Efecto especial para stocks en reventa */
+.stock-card[data-resale="true"] {
+    border: 2px solid #2196F3;
+    background: linear-gradient(135deg, #f8f9ff 0%, #e3f2fd 100%);
+    position: relative;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(33, 150, 243, 0.15);
+}
+
+.stock-card[data-resale="true"]::before {
+    background: linear-gradient(90deg, #2196F3 0%, #1976D2 100%);
+    height: 6px;
+}
+
+/* Agregar el badge de oferta con ::after para evitar conflictos */
+.stock-card[data-resale="true"]::after {
+    content: '🏷️ OFERTA ESPECIAL';
+    position: absolute;
+    top: -0px;
+    right: 15px;
+    background: linear-gradient(135deg, #FF5722, #D84315);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 15px;
+    font-size: 0.65em;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 8px rgba(255, 87, 34, 0.4);
+    z-index: 20;
+    animation: bounceIn 0.5s ease-out;
+}
+
+
+.stock-card[data-resale="true"]:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(33, 150, 243, 0.25);
+}
+
+.stock-card[data-resale="true"]:hover::after {
+    animation: pulse 1s infinite;
+}
+
+/* Animaciones mejoradas */
+@keyframes bounceIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.3) translateY(-10px);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.05) translateY(-2px);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+/* Hacer que el precio en el header sea flexible para mostrar los badges */
+.stock-header .stock-price.price-container {
+    display: flex;
+    flex-direction: row; /* Cambiar a row para mostrar en línea */
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+/* Ajustar el contenedor de precio en los detalles también */
+.detail-row .value.price-container {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+/* Botón de administrador */
+.btn-admin {
+    background: linear-gradient(135deg, #9C27B0, #673AB7);
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.8em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: 4px;
+}
+
+.btn-admin:hover {
+    background: linear-gradient(135deg, #8E24AA, #5E35B1);
+    transform: translateY(-1px);
+}
+
+.btn-admin:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Modal de descuento */
+.discount-modal {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    z-index: 100;
+    background: rgba(0, 0, 0, 0.8);
+    border-radius: 15px;
+    padding: 4px;
+    animation: modalFadeIn 0.2s ease-out;
+}
+
+.discount-modal-content {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    min-width: 250px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.discount-modal h4 {
+    margin: 0 0 8px 0;
+    font-size: 0.9em;
+    color: #333;
+    text-align: center;
+}
+
+.discount-modal p {
+    margin: 0 0 12px 0;
+    font-size: 0.8em;
+    color: #666;
+    text-align: center;
+    font-weight: 500;
+}
+
+.discount-input-group {
+    position: relative;
+    margin-bottom: 12px;
+}
+
+.discount-input-group input {
+    width: 100%;
+    padding: 8px 25px 8px 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 1em;
+    text-align: center;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+.discount-input-group input:focus {
+    border-color: #4CAF50;
+}
+
+.discount-symbol {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #666;
+    font-weight: 600;
+    pointer-events: none;
+}
+
+.discount-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: space-between;
+}
+
+.btn-cancel {
+    background: linear-gradient(135deg, #f44336, #d32f2f);
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.8em;
+    font-weight: 600;
+    cursor: pointer;
+    flex: 1;
+    transition: all 0.2s ease;
+}
+
+.btn-cancel:hover {
+    background: linear-gradient(135deg, #e53935, #c62828);
+    transform: translateY(-1px);
+}
+
+.btn-confirm {
+    background: linear-gradient(135deg, #4CAF50, #388E3C);
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.8em;
+    font-weight: 600;
+    cursor: pointer;
+    flex: 1;
+    transition: all 0.2s ease;
+}
+
+.btn-confirm:hover {
+    background: linear-gradient(135deg, #43A047, #2E7D32);
+    transform: translateY(-1px);
+}
+
+.btn-confirm:disabled,
+.btn-cancel:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Animación del modal */
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.8) translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* Posicionamiento relativo para el stock-card */
+.stock-card {
+    position: relative;
+}

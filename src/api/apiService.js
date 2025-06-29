@@ -19,6 +19,7 @@ const clearTokenCache = () => {
 // Para obtener el token de Auth0 con cache
 const getToken = async () => {
   try {
+
     // Verificar si el token en cache aún es válido (expires en 59 minutos)
     if (tokenCache && Date.now() < tokenExpiry) {
       console.log("🔑 Token obtenido desde cache");
@@ -65,13 +66,30 @@ const getToken = async () => {
 // Función de ayuda para crear headers con autenticación
 const getAuthHeaders = async () => {
   const token = await getToken();
+  console.log('🔧 DEBUG: Token obtenido para buyStock:', token);
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
 // API de Stocks
-export const getStocks = async (params = {}) => {
+export const getStocks = async (params = {}, token = null) => {
   try {
-    const headers = await getAuthHeaders();
+    console.log('🔧 DEBUG: getStocks called with params:', params);
+    console.log('🔧 DEBUG: Token recibido en getStocks:', token ? 'SÍ' : 'NO');
+
+    // CORREGIR: Usar token recibido si está disponible
+    let authToken = token;
+    if (!authToken) {
+      console.log('🔧 DEBUG: No token recibido, obteniendo con getToken()');
+      authToken = await getToken();
+      console.log('🔧 DEBUG: Token obtenido por getToken():', authToken ? 'SÍ' : 'NO');
+    }
+    
+    const headers = authToken ? {
+      Authorization: `Bearer ${authToken}`,
+      'Content-Type': 'application/json'
+    } : {};
+    
+    console.log('🔧 DEBUG: Headers para getStocks:', headers);
     
     // Construir query string con todos los parámetros
     const queryParams = new URLSearchParams();
@@ -113,9 +131,29 @@ export const getStockBySymbol = async (symbol) => {
   }
 };
 
-export const buyStock = async (symbol, quantity) => {
+export const buyStock = async (symbol, quantity, token=null) => {
   try {
-    const headers = await getAuthHeaders();
+    console.log('🔧 DEBUG: buyStock called with:', { symbol, quantity });
+    console.log('🔧 DEBUG: Token recibido en buyStock:', token ? 'SÍ' : 'NO');
+    
+    // CORREGIR: Usar token recibido si está disponible
+    let authToken = token;
+    if (!authToken) {
+      console.log('🔧 DEBUG: No token recibido, obteniendo con getToken()');
+      authToken = await getToken();
+      console.log('🔧 DEBUG: Token obtenido por getToken() en buyStock:', authToken ? 'SÍ' : 'NO');
+    }
+    
+    if (!authToken) {
+      throw new Error('No se pudo obtener token de autenticación');
+    }
+    
+    const headers = {
+      Authorization: `Bearer ${authToken}`,
+      'Content-Type': 'application/json'
+    };
+    
+    console.log('🔧 DEBUG: Headers para buyStock:', headers);
     const response = await axios.post(
       `${API_URL}/stocks/buy`,
       { symbol, quantity },
@@ -212,6 +250,29 @@ export const getEvents = async (page = 1, count = 25, type = 'ALL') => {
     return { data: events };
   } catch (err) {
     console.error("Error al obtener eventos:", err);
+    throw err;
+  }
+};
+
+export const updateResaleDiscount = async (resaleId, discountPercentage) => {
+  try {
+    console.log('🔧 API DEBUG: updateResaleDiscount called');
+    console.log('🔧 API DEBUG: resaleId:', resaleId);
+    console.log('🔧 API DEBUG: discountPercentage:', discountPercentage);
+    const headers = await getAuthHeaders();
+    console.log('🔧 API DEBUG: headers:', headers);
+    const response = await axios.patch(
+      `${API_URL}/admin/stocks/resale/${resaleId}`,
+      { discount_percentage: discountPercentage },
+      { headers }
+    );
+    return response.data;
+  } catch (err) {
+    console.error(`❌ API ERROR: updating discount for ${resaleId}:`, err);
+    console.error('❌ API ERROR response:', err.response?.data);
+    console.error('❌ API ERROR status:', err.response?.status);
+    console.error('❌ API ERROR headers:', err.response?.headers);
+    console.error(`Error al actualizar descuento para ${resaleId}:`, err);
     throw err;
   }
 };

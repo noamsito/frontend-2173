@@ -677,3 +677,40 @@
     font-weight: 600;
     font-size: var(--font-size-sm);
   }
+
+  /* Indicador de reventa en detalles del stock */
+  .resale-indicator {
+    background: linear-gradient(135deg, #FF5722, #D84315);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    text-align: center;
+    font-size: 0.9em;
+    animation: fadeInScale 0.3s ease-out;
+  }
+
+  /* Fila de ahorro en el resumen de costos */
+  .cost-row.savings-row {
+    background-color: #e8f5e8;
+    border-radius: 4px;
+    padding: 8px 12px;
+    margin: 4px 0;
+  }
+
+  .cost-row.savings-row .savings {
+    color: #2e7d32;
+    font-weight: 600;
+  }
+
+  /* Highlight para información importante */
+  .info-item.highlight {
+    background-color: #e8f5e8;
+    border-radius: 4px;
+    padding: 8px;
+  }
+
+  .info-item.highlight .savings {
+    color: #2e7d32;
+    font-weight: 600;
+  }

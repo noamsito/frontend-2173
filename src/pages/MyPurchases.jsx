@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getUserPurchases } from '../api/purchases';
+import { getUserPurchases, resellStock } from '../api/purchases';
 import { useAuth0 } from '@auth0/auth0-react';
 import { Link, useSearchParams } from 'react-router-dom';
 
@@ -13,6 +13,21 @@ const MyPurchases = () => {
   const [sortBy, setSortBy] = useState('date'); // date, symbol, value, performance
   const [filterBy, setFilterBy] = useState('all'); // all, profitable, losing
   const [searchTerm, setSearchTerm] = useState('');
+
+  // Estados para el modal de reventa
+  const [showResaleModal, setShowResaleModal] = useState(false);
+  const [selectedPurchase, setSelectedPurchase] = useState(null);
+  const [resaleQuantity, setResaleQuantity] = useState('');
+  const [resaleDiscount, setResaleDiscount] = useState(0);
+  const [resaleLoading, setResaleLoading] = useState(false);
+
+  // Verificar si el usuario es admin
+  const isAdmin = () => {
+    return user && (
+      user['https://stockmarket-api/roles']?.includes('admin') ||
+      user.email === 'antonio@uc.cl' //Hardcodeado para testing
+    );
+  };
 
   useEffect(() => {
 
@@ -39,7 +54,10 @@ const MyPurchases = () => {
       // Obtener token de acceso
       let token = null;
       try {
-        token = await getAccessTokenSilently();
+        token = await getAccessTokenSilently({
+            audience: 'https://stockmarket-api/',
+            scope: 'openid profile email'
+        });
         console.log("🔑 Token obtenido exitosamente"); // DEBUG
       } catch (tokenError) {
         console.warn('Error obteniendo token de acceso:', tokenError);
@@ -52,6 +70,74 @@ const MyPurchases = () => {
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Abrir modal de reventa
+  const openResaleModal = (purchase) => {
+    setSelectedPurchase(purchase);
+    setResaleQuantity('');
+    setResaleDiscount('');
+    setShowResaleModal(true);
+  };
+
+  // Cerrar modal de reventa
+  const closeResaleModal = () => {
+    setShowResaleModal(false);
+    setSelectedPurchase(null);
+    setResaleQuantity('');
+    setResaleDiscount('');
+  };
+
+  // Manejar reventa de acciones
+  const handleResale = async () => {
+    if (!selectedPurchase || !resaleQuantity || resaleDiscount < 0) {
+      alert('Por favor, completa todos los campos correctamente.');
+      return;
+    }
+    
+    const quantity = parseInt(resaleQuantity);
+    const discount = parseFloat(resaleDiscount) || 0;
+
+    if (quantity <= 0 || quantity > selectedPurchase.quantity) {
+      alert(`La cantidad debe ser entre 1 y ${selectedPurchase.quantity}.`);
+      return;
+    }
+
+    if (discount < 0 || discount > 10) {
+      alert('El descuento debe estar entre 0 y 10%');
+      return;
+    }
+
+    try {
+      setResaleLoading(true);
+      const token = await getAccessTokenSilently({
+          audience: 'https://stockmarket-api/',
+          scope: 'openid profile email'
+      });
+      
+      await resellStock(selectedPurchase.id, quantity, discount, token);
+      
+      // Actualizar la lista de compras localmente
+      setPurchases(prevPurchases => 
+        prevPurchases.map(purchase => {
+          if (purchase.id === selectedPurchase.id) {
+            const newQuantity = purchase.quantity - quantity;
+            return newQuantity > 0 
+              ? { ...purchase, quantity: newQuantity }
+              : null; // Marcar para eliminación
+          }
+          return purchase;
+        }).filter(purchase => purchase !== null) // Eliminar compras con cantidad 0
+      );
+
+      setSuccessMessage(`Se revendieron ${quantity} acciones de ${selectedPurchase.symbol} con ${discount}% de descuento`);
+      closeResaleModal();
+    } catch (error) {
+      console.error('Error al revender:', error);
+      alert('Error al procesar la reventa. Intenta de nuevo.');
+    } finally {
+      setResaleLoading(false);
     }
   };
 
@@ -296,7 +382,21 @@ const MyPurchases = () => {
                   </div>
                   <div className="detail-row">
                     <span className="label">Precio de compra:</span>
-                    <span className="value">{formatCurrency(purchase.priceAtPurchase)}</span>
+                    <span className="value">
+                      {/* Mostrar precio original tachado si es una reventa */}
+                      {purchase.is_resale && purchase.discount_info?.original_price && (
+                        <span className="original-price-crossed">
+                          ${purchase.discount_info.original_price.toFixed(2)}
+                        </span>
+                      )}
+                      {formatCurrency(purchase.priceAtPurchase)}
+                      {/* Mostrar badge de descuento */}
+                      {purchase.is_resale && purchase.discount_info?.discount_percentage > 0 && (
+                        <span className="discount-badge">
+                          -{purchase.discount_info.discount_percentage}%
+                        </span>
+                      )}
+                    </span>
                   </div>
                   <div className="detail-row">
                     <span className="label">Precio actual:</span>
@@ -325,6 +425,14 @@ const MyPurchases = () => {
                   >
                     📊 Ver Estimación Detallada
                   </Link>
+                  {isAdmin() && (
+                    <button 
+                      onClick={() => openResaleModal(purchase)} 
+                      className="button button-secondary"
+                    >
+                      💰 Revender Acciones
+                    </button>
+                  )}
                 </div>
               </div>
             );
@@ -341,6 +449,56 @@ const MyPurchases = () => {
           + Comprar Más Acciones
         </Link>
       </div>
+      {/* Modal de Reventa */}
+      {showResaleModal && (
+        <div className="modal-overlay" onClick={closeResaleModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h3>Revender Acciones de {selectedPurchase.symbol}</h3>
+            <p>Cantidad disponible: <strong>{selectedPurchase.quantity}</strong> acciones</p>
+            <div className="form-group">
+              <label htmlFor="resale-quantity">Cantidad a revender:</label>
+              <input
+                type="number"
+                id="resale-quantity"
+                value={resaleQuantity}
+                onChange={(e) => setResaleQuantity(e.target.value)}
+                min="1"
+                max={selectedPurchase.quantity}
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="resale-discount">Descuento:</label>
+              <input
+                type="number"
+                id="resale-discount"
+                value={resaleDiscount}
+                onChange={(e) => setResaleDiscount(e.target.value)}
+                min="0"
+                max="10"
+                step="0.01"
+                placeholder="0 - 10%"
+              />
+            </div>
+            <div className="modal-actions">
+              <button
+                type="button"
+                onClick={closeResaleModal}
+                className="button button-secondary"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleResale}
+                className="button button-primary"
+                disabled={resaleLoading}
+              >
+                {resaleLoading ? 'Procesando...' : 'Revender'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
