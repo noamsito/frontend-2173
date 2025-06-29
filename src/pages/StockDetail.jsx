@@ -123,16 +123,30 @@ const StockDetail = () => {
 
       let token = null;
       try {
-        token = await getAccessTokenSilently({
-          audience: 'https://stockmarket-api/',
-          scope: 'openid profile email'
-        });
+        token = await getAccessTokenSilently();
         console.log('🔧 DEBUG: Token obtenido para compra:', token ? 'SÍ' : 'NO');
       } catch (tokenError) {
         console.error('❌ Error obteniendo token para compra:', tokenError);
+
+        // ✅ ERROR MÁS DESCRIPTIVO PARA TOKENS
+        let errorMessage = 'Error de autenticación. ';
+        
+        if (tokenError.error === 'login_required') {
+          errorMessage += 'Tu sesión ha expirado. Por favor, recarga la página e inicia sesión nuevamente.';
+        } else if (tokenError.error === 'consent_required') {
+          errorMessage += 'Se requiere nueva autorización. Por favor, recarga la página.';
+        } else if (tokenError.message?.includes('Missing Refresh Token')) {
+          errorMessage += 'Token de actualización no disponible. Recarga la página para renovar tu sesión.';
+        } else if (tokenError.message?.includes('refresh')) {
+          errorMessage += 'Error renovando sesión. Intenta recargar la página o cerrar y abrir el navegador.';
+        } else if (tokenError.error === 'invalid_grant') {
+          errorMessage += 'Sesión inválida. Por favor, cierra y abre el navegador nuevamente.';
+        } else {
+          errorMessage += `Detalles técnicos: ${tokenError.message || tokenError.error || 'Error desconocido'}`;
+        }
         setBuyingStatus({
           loading: false,
-          error: 'Error de autenticación. Por favor, recarga la página.',
+          error: errorMessage,
           success: ''
         });
         return;
@@ -207,10 +221,7 @@ const StockDetail = () => {
       // OBTENER TOKEN para retry
       let token = null;
       try {
-        token = await getAccessTokenSilently({
-          audience: 'https://stockmarket-api/',
-          scope: 'openid profile email'
-        });
+        token = await getAccessTokenSilently();
         console.log('🔧 DEBUG: Token obtenido para retry:', token ? 'SÍ' : 'NO');
       } catch (tokenError) {
         console.error('❌ Error obteniendo token para retry:', tokenError);

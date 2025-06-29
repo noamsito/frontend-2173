@@ -54,10 +54,7 @@ const MyPurchases = () => {
       // Obtener token de acceso
       let token = null;
       try {
-        token = await getAccessTokenSilently({
-            audience: 'https://stockmarket-api/',
-            scope: 'openid profile email'
-        });
+        token = await getAccessTokenSilently();
         console.log("🔑 Token obtenido exitosamente"); // DEBUG
       } catch (tokenError) {
         console.warn('Error obteniendo token de acceso:', tokenError);

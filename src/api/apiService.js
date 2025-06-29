@@ -73,6 +73,7 @@ const getAuthHeaders = async () => {
 // API de Stocks
 export const getStocks = async (params = {}, token = null) => {
   try {
+    
     console.log('🔧 DEBUG: getStocks called with params:', params);
     console.log('🔧 DEBUG: Token recibido en getStocks:', token ? 'SÍ' : 'NO');
 

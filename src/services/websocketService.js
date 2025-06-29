@@ -1,4 +1,4 @@
-// src/services/websocketService.js
+// ✅ USAR SOLO SOCKET.IO (más robusto para aplicaciones web)
 import { io } from 'socket.io-client';
 
 class WebSocketService {
@@ -8,51 +8,86 @@ class WebSocketService {
         this.listeners = new Map();
         this.reconnectAttempts = 0;
         this.maxReconnectAttempts = 5;
+        this.reconnectInterval = 3000; // ✅ DEFINIR INTERVALO
+        this.connectionStatus = { // ✅ DEFINIR ESTADO DE CONEXIÓN
+            connected: false,
+            socketId: null,
+            reconnectAttempts: 0
+        };
     }
 
     connect() {
-        if (this.socket?.connected) {
-            console.log('📡 WebSocket ya está conectado');
+        // ✅ VERIFICAR SI YA ESTÁ CONECTADO (SOCKET.IO)
+        if (this.socket && this.socket.connected) {
+            console.log('✅ WebSocket ya está conectado');
             return;
         }
 
-        console.log('📡 Conectando a WebSocket...');
-        
-        this.socket = io('http://localhost:3000', {
-            transports: ['websocket', 'polling'],
-            timeout: 20000,
-            forceNew: true,
-            reconnection: true,
-            reconnectionDelay: 1000,
-            reconnectionAttempts: this.maxReconnectAttempts
+        try {
+            console.log('🔄 Conectando con Socket.IO...');
+
+            const connectionUrl = 'http://localhost:3000';
+            console.log('🔄 Conectando con Socket.IO...');
+            console.log('🎯 URL DE CONEXIÓN:', connectionUrl);
+            console.log('🎯 Puerto extraído:', new URL(connectionUrl).port);
+            console.log('🎯 Host extraído:', new URL(connectionUrl).hostname);
+            
+            // ✅ CREAR CONEXIÓN SOCKET.IO
+            this.socket = io('http://localhost:3000', {
+                transports: ['websocket', 'polling'],
+                timeout: 10000,
+                reconnectionAttempts: this.maxReconnectAttempts,
+                reconnectionDelay: this.reconnectInterval,
+            });
+            // ✅ DEBUG: MOSTRAR CONFIGURACIÓN DEL SOCKET
+        console.log('🔧 Socket configurado:', {
+            url: this.socket.io.uri,
+            transports: this.socket.io.opts.transports,
+            timeout: this.socket.io.opts.timeout
         });
 
-        this.setupEventListeners();
+            this.setupEventListeners();
+
+        } catch (error) {
+            console.error('❌ Error connecting to Socket.IO:', error);
+            this.attemptManualReconnect();
+        }
     }
 
     setupEventListeners() {
-        // ✅ EVENTOS DE CONEXIÓN
-        this.socket.on('connect', () => {
-            console.log('✅ WebSocket conectado:', this.socket.id);
+        // ✅ EVENTOS DE CONEXIÓN SOCKET.IO
+        this.socket.on('connected', () => {
+            console.log('✅ Socket.IO conectado con ID:', this.socket.id);
             this.isConnected = true;
+            this.connectionStatus.connected = true;
+            this.connectionStatus.socketId = this.socket.id;
             this.reconnectAttempts = 0;
-            this.notifyListeners('connection_status', { connected: true });
+            this.connectionStatus.reconnectAttempts = 0;
+            
+            this.notifyListeners('connection_status', this.connectionStatus);
         });
 
         this.socket.on('disconnect', (reason) => {
-            console.log('❌ WebSocket desconectado:', reason);
+            console.log('❌ Socket.IO desconectado:', reason);
             this.isConnected = false;
-            this.notifyListeners('connection_status', { connected: false, reason });
+            this.connectionStatus.connected = false;
+            this.connectionStatus.socketId = null;
+            
+            this.notifyListeners('connection_status', { 
+                ...this.connectionStatus, 
+                reason 
+            });
         });
 
         this.socket.on('connect_error', (error) => {
-            console.error('❌ Error de conexión WebSocket:', error);
             this.reconnectAttempts++;
+            this.connectionStatus.reconnectAttempts = this.reconnectAttempts;
             
             if (this.reconnectAttempts >= this.maxReconnectAttempts) {
                 console.error('❌ Máximo de intentos de reconexión alcanzado');
                 this.notifyListeners('connection_error', { 
-                    error: 'Conexión perdida permanentemente' 
+                    error: 'Conexión perdida permanentemente',
+                    attempts: this.reconnectAttempts
                 });
             }
         });
@@ -63,63 +98,69 @@ class WebSocketService {
             this.notifyListeners('server_welcome', data);
         });
 
-        // ✅ ACTUALIZACIONES DE STOCK (RF06)
+        // ✅ ACTUALIZACIONES DE STOCK
         this.socket.on('stock-update', (update) => {
             console.log('📈 Actualización de stock recibida:', update);
             this.handleStockUpdate(update);
+        });
+
+        // ✅ RESPUESTA A PING
+        this.socket.on('pong', (data) => {
+            console.log('🏓 Pong recibido:', data);
         });
     }
 
     handleStockUpdate(update) {
         const { type, data, timestamp } = update;
 
+        // ✅ CREAR ESTRUCTURA CONSISTENTE PARA NOTIFICACIONES
+        const notification = {
+            id: Date.now() + Math.random(),
+            type: this.getNotificationType(type),
+            message: this.getNotificationMessage(type, data),
+            data: data,
+            timestamp: timestamp || new Date().toISOString()
+        };
+
+        // ✅ NOTIFICAR TANTO AL TIPO ESPECÍFICO COMO AL GENÉRICO
+        this.notifyListeners(type, notification);
+        this.notifyListeners('stock_update', notification);
+    }
+
+    getNotificationType(type) {
+        const typeMap = {
+            'external_purchase': 'success',
+            'insufficient_stock': 'warning',
+            'low_stock_alert': 'warning', 
+            'out_of_stock': 'error',
+            'external_purchase_error': 'error'
+        };
+        return typeMap[type] || 'info';
+    }
+
+    getNotificationMessage(type, data) {
         switch (type) {
             case 'external_purchase':
-                this.notifyListeners('external_purchase', {
-                    message: `${data.group_id} compró ${data.quantity_purchased} acciones de ${data.symbol}`,
-                    data: data,
-                    timestamp: timestamp
-                });
-                break;
-
+                return `${data.group_id} compró ${data.quantity_purchased} acciones de ${data.symbol}`;
+            
             case 'insufficient_stock':
-                this.notifyListeners('insufficient_stock', {
-                    message: `Stock insuficiente: ${data.symbol} (solicitado: ${data.requested_quantity}, disponible: ${data.available_quantity})`,
-                    data: data,
-                    timestamp: timestamp
-                });
-                break;
-
+                return `Stock insuficiente: ${data.symbol} (solicitado: ${data.requested_quantity}, disponible: ${data.available_quantity})`;
+            
             case 'low_stock_alert':
-                this.notifyListeners('low_stock_alert', {
-                    message: `⚠️ Stock bajo: ${data.symbol} (${data.remaining_quantity} restantes)`,
-                    data: data,
-                    timestamp: timestamp
-                });
-                break;
-
+                return `⚠️ Stock bajo: ${data.symbol} (${data.remaining_quantity} restantes)`;
+            
             case 'out_of_stock':
-                this.notifyListeners('out_of_stock', {
-                    message: `🚫 Stock agotado: ${data.symbol}`,
-                    data: data,
-                    timestamp: timestamp
-                });
-                break;
-
+                return `🚫 Stock agotado: ${data.symbol}`;
+            
             case 'external_purchase_error':
-                this.notifyListeners('external_purchase_error', {
-                    message: `Error en compra externa: ${data.error}`,
-                    data: data,
-                    timestamp: timestamp
-                });
-                break;
-
+                return `Error en compra externa: ${data.error}`;
+            
             default:
-                console.log('📡 Tipo de actualización desconocido:', type, data);
+                return `Actualización de stock: ${data.symbol || 'desconocido'}`;
         }
     }
 
-    // ✅ SISTEMA DE SUSCRIPCIONES
+    // ✅ SISTEMA DE SUSCRIPCIONES UNIFICADO
     subscribe(eventType, callback) {
         if (!this.listeners.has(eventType)) {
             this.listeners.set(eventType, []);
@@ -146,9 +187,25 @@ class WebSocketService {
                 try {
                     callback(data);
                 } catch (error) {
-                    console.error(`Error en listener de ${eventType}:`, error);
+                    console.error(`❌ Error en listener de ${eventType}:`, error);
                 }
             });
+        }
+    }
+
+    // ✅ RECONEXIÓN MANUAL SI SOCKET.IO FALLA
+    attemptManualReconnect() {
+        if (this.reconnectAttempts < this.maxReconnectAttempts) {
+            this.reconnectAttempts++;
+            this.connectionStatus.reconnectAttempts = this.reconnectAttempts;
+            
+            console.log(`🔄 Reintentando conexión manual (${this.reconnectAttempts}/${this.maxReconnectAttempts})...`);
+            
+            setTimeout(() => {
+                this.connect();
+            }, this.reconnectInterval);
+        } else {
+            console.log('❌ Se agotaron los intentos de reconexión manual');
         }
     }
 
@@ -163,23 +220,35 @@ class WebSocketService {
 
     disconnect() {
         if (this.socket) {
-            console.log('📡 Desconectando WebSocket...');
+            console.log('📡 Desconectando Socket.IO...');
             this.socket.disconnect();
             this.socket = null;
             this.isConnected = false;
+            this.connectionStatus.connected = false;
+            this.connectionStatus.socketId = null;
         }
     }
 
     // ✅ MÉTODO PARA TESTING
     testConnection() {
-        if (!this.isConnected) {
-            console.error('❌ WebSocket no está conectado');
+        if (!this.isConnected || !this.socket) {
+            console.error('❌ Socket.IO no está conectado');
             return false;
         }
 
         // Enviar ping al servidor para verificar conexión
         this.socket.emit('ping', { timestamp: Date.now() });
+        console.log('🏓 Ping enviado al servidor');
         return true;
+    }
+
+    // ✅ MÉTODO PARA ENVIAR MENSAJES
+    send(eventName, data) {
+        if (this.socket && this.isConnected) {
+            this.socket.emit(eventName, data);
+        } else {
+            console.warn('⚠️ Socket.IO no está conectado - no se puede enviar mensaje');
+        }
     }
 }
 

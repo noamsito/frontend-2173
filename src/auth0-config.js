@@ -10,8 +10,11 @@ export const getAuth0Client = async () => {
       authorizationParams: {
         redirect_uri: window.location.origin,
         audience: "https://stockmarket-api/",
-        scope: "openid profile email" // Añadir scope para asegurar que se incluya el sub
-      }
+        scope: "openid profile email offline_access" // Añadir scope para asegurar que se incluya el sub
+      },
+      cacheLocation: 'localstorage', // Usar localStorage en lugar de memoria
+      useRefreshTokens: true, // ✅ HABILITAR REFRESH TOKENS
+      useRefreshTokensFallback: true // ✅ FALLBACK SI NO HAY REFRESH TOKEN
     });
   }
   return auth0Client;

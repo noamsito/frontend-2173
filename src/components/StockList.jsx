@@ -107,10 +107,7 @@ export function StockList() {
             setLoading(true);
             setError('');
             
-            const token = await getAccessTokenSilently({
-                audience: 'https://stockmarket-api/',
-                scope: 'openid profile email'
-            });
+            const token = await getAccessTokenSilently();
             
             const data = await getStocks({ page: 1, count: 5 }, token);
             setStocks(data.data || []);

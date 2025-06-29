@@ -57,14 +57,26 @@ export default function TestStocks() {
             let token = null;
             
             try {
-                token = await getAccessTokenSilently({
-                    audience: 'https://stockmarket-api/',
-                    scope: 'openid profile email'
-                });
+                token = await getAccessTokenSilently();
                 console.log('🔑 DEBUG: Token obtenido en testStocks:', token ? 'SÍ' : 'NO');
                 console.log('🔑 DEBUG: Token:', token);
             } catch (tokenError) {
                 console.error('❌ DEBUG: Error obteniendo token:', tokenError);
+
+                // ✅ AGREGAR MANEJO DESCRIPTIVO TAMBIÉN AQUÍ
+                let tokenErrorMessage = 'Error de autenticación al obtener stocks. ';
+                
+                if (tokenError.message?.includes('Missing Refresh Token')) {
+                    tokenErrorMessage += 'Tu sesión ha expirado. Por favor, recarga la página para renovar tu sesión.';
+                } else if (tokenError.error === 'login_required') {
+                    tokenErrorMessage += 'Necesitas iniciar sesión nuevamente.';
+                } else {
+                    tokenErrorMessage += `Detalles: ${tokenError.message || tokenError.error || 'Error desconocido'}`;
+                }
+                
+                setError(tokenErrorMessage);
+                setLoading(false);
+                return;
             }
             
             const currentPage = applyFilters ? 1 : page;

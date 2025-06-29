@@ -298,6 +298,10 @@
     font-weight: 700;
     letter-spacing: 0.05em;
     box-shadow: var(--shadow-sm);
+    z-index: 100 !important;
+    background-clip: unset !important;
+    -webkit-background-clip: unset !important;
+    -webkit-text-fill-color: white !important;
   }
   
   .stock-price {
