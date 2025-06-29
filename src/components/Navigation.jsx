@@ -31,9 +31,6 @@ const Navigation = () => {
 
   return (
     <nav className="nav-container">
-      <div className="logo">
-        <h2>StockMarketU</h2>
-      </div>
       
       {/* Mensaje de admin prominente */}
       {!loading && userProfile?.isAdmin && (

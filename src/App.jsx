@@ -1,6 +1,9 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { useAuth0 } from '@auth0/auth0-react';
 import { LoginButton, LogoutButton, Profile } from './components/AuthComponents';
+import React, { useEffect } from 'react';
+import { websocketService } from './services/websocketService';
+import { StockList } from './components/StockList';
 import Navigation from './components/Navigation';
 import SystemStatus from './components/SystemStatus';
 import TestStocks from './testStocks';
@@ -11,6 +14,7 @@ import EventLog from './pages/EventLog';
 import './styles/SystemStatus.css';
 import './styles/EventLog.css';
 import './styles/stock-detail.css';
+import './styles/WebSocket.css';
 
 
 function App() {
@@ -23,6 +27,12 @@ function App() {
   if (isLoading) {
     return <div className="loading-container">Cargando...</div>;
   }
+  useEffect(() => {
+    websocketService.connect();
+    return () => {
+      websocketService.disconnect();
+    };
+  }, []);
 
   return (
     <Router>
@@ -36,6 +46,7 @@ function App() {
                 <Profile />
                 <LogoutButton />
               </div>
+              <StockList />
             </header>
             
             <SystemStatus />

@@ -54,10 +54,15 @@ export default function TestStocks() {
             }
 
             setLoading(true);
+            let token = null;
             
             try {
-                const token = await getAccessTokenSilently();
+                token = await getAccessTokenSilently({
+                    audience: 'https://stockmarket-api/',
+                    scope: 'openid profile email'
+                });
                 console.log('🔑 DEBUG: Token obtenido en testStocks:', token ? 'SÍ' : 'NO');
+                console.log('🔑 DEBUG: Token:', token);
             } catch (tokenError) {
                 console.error('❌ DEBUG: Error obteniendo token:', tokenError);
             }
@@ -80,8 +85,8 @@ export default function TestStocks() {
             if (filters.minQuantity) params.minQuantity = filters.minQuantity;
             if (filters.maxQuantity) params.maxQuantity = filters.maxQuantity;
             if (filters.date) params.date = filters.date;
-            
-            const data = await getStocks(params);
+
+            const data = await getStocks(params, token);
             setStocks(data.data || []);
             setError('');
         } catch (err) {

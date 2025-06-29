@@ -120,9 +120,26 @@ const StockDetail = () => {
     
     try {
       setBuyingStatus({ loading: true, error: '', success: '' });
-      
-      const result = await buyStock(symbol, quantity);
-  
+
+      let token = null;
+      try {
+        token = await getAccessTokenSilently({
+          audience: 'https://stockmarket-api/',
+          scope: 'openid profile email'
+        });
+        console.log('🔧 DEBUG: Token obtenido para compra:', token ? 'SÍ' : 'NO');
+      } catch (tokenError) {
+        console.error('❌ Error obteniendo token para compra:', tokenError);
+        setBuyingStatus({
+          loading: false,
+          error: 'Error de autenticación. Por favor, recarga la página.',
+          success: ''
+        });
+        return;
+      }
+
+      const result = await buyStock(symbol, quantity, token);
+
       // Si la compra requiere pago con Webpay, redirigir
       if (result.requiresPayment && result.webpayUrl && result.webpayToken) {
         console.log('Redirigiendo a webpay:', result.webpayUrl);
@@ -186,8 +203,26 @@ const StockDetail = () => {
     
     try {
       setBuyingStatus({ loading: true, error: '', success: '' });
-      
-      const result = await buyStock(retrySymbol, retryQuantity);
+
+      // OBTENER TOKEN para retry
+      let token = null;
+      try {
+        token = await getAccessTokenSilently({
+          audience: 'https://stockmarket-api/',
+          scope: 'openid profile email'
+        });
+        console.log('🔧 DEBUG: Token obtenido para retry:', token ? 'SÍ' : 'NO');
+      } catch (tokenError) {
+        console.error('❌ Error obteniendo token para retry:', tokenError);
+        setBuyingStatus({
+          loading: false,
+          error: 'Error de autenticación en reintento.',
+          success: ''
+        });
+        return;
+      }
+
+      const result = await buyStock(retrySymbol, retryQuantity, token);
 
       if (result.requiresPayment && result.webpayUrl && result.webpayToken) {
         console.log('Redirigiendo a webpay en reintento:', result.webpayUrl);

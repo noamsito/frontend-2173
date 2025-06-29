@@ -1,0 +1,472 @@
+/* ✅ WIDGET DE TIEMPO REAL - COMPONENTE PRINCIPAL */
+.realtime-widget {
+    position: relative;
+    display: inline-block;
+    /* ✅ REMOVER Z-INDEX YA QUE EL DROPDOWN ESTÁ EN PORTAL */
+}
+
+/* ✅ BOTÓN COMPACTO - SIN CAMBIOS */
+.realtime-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: linear-gradient(135deg, var(--secondary-light) 0%, var(--gray-light) 100%);
+    border: 1px solid var(--gray-light);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: all var(--transition-speed) ease;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-dark);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    position: relative;
+}
+
+.realtime-toggle:hover {
+    background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%);
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.realtime-toggle.connected {
+    border-color: var(--success);
+}
+
+.realtime-toggle.disconnected {
+    border-color: var(--error);
+}
+
+.realtime-icon {
+    font-size: 1rem;
+}
+
+.realtime-text {
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+
+.connection-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.connection-dot.connected {
+    background: var(--success);
+    box-shadow: 0 0 6px var(--success);
+    animation: pulse-success 2s infinite;
+}
+
+.connection-dot.disconnected {
+    background: var(--error);
+}
+
+.dropdown-arrow {
+    font-size: 0.7rem;
+    transition: transform var(--transition-speed) ease;
+    transform: rotate(0deg);
+}
+
+.dropdown-arrow.open {
+    transform: rotate(90deg);
+}
+
+/* ✅ PORTAL DEL DROPDOWN - NUEVO ESTILO */
+.realtime-dropdown-portal {
+    animation: dropdownSlideRight 0.3s ease-out;
+    position: relative;
+}
+
+/* ✅ FLECHA APUNTANDO AL BOTÓN */
+.dropdown-arrow-pointer {
+    position: absolute;
+    top: 20px;
+    left: -8px;
+    width: 0;
+    height: 0;
+    border-top: 8px solid transparent;
+    border-bottom: 8px solid transparent;
+    border-right: 8px solid white;
+    filter: drop-shadow(-2px 0 4px rgba(0, 0, 0, 0.1));
+    z-index: 10000;
+}
+
+/* ✅ CONTENIDO DEL DROPDOWN */
+.realtime-dropdown-content {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+    border: 1px solid var(--gray-light);
+    min-width: 350px;
+    max-width: 420px;
+    overflow: hidden;
+    position: relative;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+/* ✅ RESTO DE ESTILOS SIN CAMBIOS */
+.realtime-dropdown-header {
+    padding: 16px 20px 12px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.realtime-dropdown-header h4 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.connection-status {
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    border-bottom: 1px solid var(--gray-light);
+}
+
+.connection-status.connected {
+    background: rgba(72, 187, 120, 0.05);
+    color: var(--success);
+}
+
+.connection-status.disconnected {
+    background: rgba(229, 62, 62, 0.05);
+    color: var(--error);
+}
+
+.status-icon {
+    font-size: 0.8rem;
+}
+
+.status-text {
+    font-weight: 500;
+}
+
+.stocks-section {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--gray-light);
+}
+
+.stocks-section h5 {
+    margin: 0 0 12px 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--primary-dark);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.loading-text, .error-text, .no-stocks {
+    text-align: center;
+    padding: 20px;
+    font-size: 0.85rem;
+    color: var(--gray-dark);
+    font-style: italic;
+}
+
+.error-text {
+    color: var(--error);
+}
+
+.stocks-grid {
+    display: grid;
+    gap: 8px;
+}
+
+.stock-card-mini {
+    background: var(--gray-light);
+    border-radius: 6px;
+    padding: 10px 12px;
+    border: 1px solid var(--gray);
+    transition: all var(--transition-speed) ease;
+}
+
+.stock-card-mini:hover {
+    background: white;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.stock-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.stock-symbol {
+    font-weight: 600;
+    color: var(--primary-dark);
+    font-size: 0.85rem;
+}
+
+.updated-badge {
+    color: var(--success);
+    font-size: 0.6rem;
+    animation: pulse-success 1.5s infinite;
+}
+
+.stock-card-details {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.stock-price {
+    color: var(--success);
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.stock-qty {
+    color: var(--gray-dark);
+    font-size: 0.75rem;
+}
+
+.notifications-section {
+    padding: 16px 20px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.notifications-section h5 {
+    margin: 0 0 12px 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--primary-dark);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.notifications-list-dropdown {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.notification-item-dropdown {
+    background: var(--gray-light);
+    border-radius: 6px;
+    padding: 8px 10px;
+    border-left: 3px solid var(--primary);
+    font-size: 0.8rem;
+    line-height: 1.3;
+}
+
+.notification-item-dropdown.success {
+    border-left-color: var(--success);
+}
+
+.notification-item-dropdown.error {
+    border-left-color: var(--error);
+}
+
+.notification-item-dropdown.warning {
+    border-left-color: var(--warning);
+}
+
+.notification-message-dropdown {
+    color: var(--text-dark);
+    margin: 0 0 4px 0;
+    font-weight: 500;
+}
+
+.notification-time-dropdown {
+    color: var(--gray-dark);
+    font-size: 0.7rem;
+    margin: 0;
+}
+
+.dropdown-footer {
+    padding: 12px 20px;
+    background: var(--gray-light);
+    border-top: 1px solid var(--gray);
+    text-align: center;
+}
+
+.close-dropdown-btn {
+    background: none;
+    border: 1px solid var(--gray);
+    color: var(--gray-dark);
+    padding: 6px 16px;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all var(--transition-speed) ease;
+}
+
+.close-dropdown-btn:hover {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+/* ✅ NOTIFICACIONES TOAST - SIN CAMBIOS */
+.realtime-notifications {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    z-index: 10000 !important;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-width: 300px;
+}
+
+.notification-toast {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    border: 1px solid var(--gray-light);
+    padding: 12px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    animation: toastSlideIn 0.3s ease-out;
+    position: relative;
+}
+
+.notification-toast.success {
+    border-left: 4px solid var(--success);
+}
+
+.notification-toast.error {
+    border-left: 4px solid var(--error);
+}
+
+.notification-toast.warning {
+    border-left: 4px solid var(--warning);
+}
+
+.notification-toast.info {
+    border-left: 4px solid var(--primary);
+}
+
+.toast-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    flex: 1;
+}
+
+.toast-icon {
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.toast-text {
+    flex: 1;
+}
+
+.toast-message {
+    margin: 0 0 4px 0;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-dark);
+    line-height: 1.3;
+}
+
+.toast-time {
+    margin: 0;
+    font-size: 0.7rem;
+    color: var(--gray-dark);
+}
+
+.toast-close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2rem;
+    color: var(--gray);
+    padding: 0;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all var(--transition-speed) ease;
+}
+
+.toast-close:hover {
+    background: var(--gray-light);
+    color: var(--text-dark);
+}
+
+/* ✅ ANIMACIONES */
+@keyframes dropdownSlideRight {
+    from {
+        opacity: 0;
+        transform: translateX(-15px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes toastSlideIn {
+    from {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes pulse-success {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.6;
+    }
+}
+
+/* ✅ RESPONSIVE */
+@media (max-width: 768px) {
+    .realtime-dropdown-portal {
+        position: fixed !important;
+        top: 60px !important;
+        left: 10px !important;
+        right: 10px !important;
+        width: calc(100% - 20px) !important;
+    }
+    
+    .dropdown-arrow-pointer {
+        display: none;
+    }
+    
+    .realtime-dropdown-content {
+        min-width: auto;
+        max-width: none;
+        width: 100%;
+    }
+    
+    .realtime-notifications {
+        right: 10px;
+        max-width: 260px;
+    }
+    
+    .realtime-toggle {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+    }
+    
+    .realtime-text {
+        display: none;
+    }
+}
