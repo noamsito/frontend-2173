@@ -1,29 +1,8 @@
 import { Link, useLocation } from 'react-router-dom';
-import { useState, useEffect } from 'react';
-import { getUserProfile } from '../api/apiService';
 
 const Navigation = () => {
   const location = useLocation();
-  const [userProfile, setUserProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  // Cargar perfil del usuario al montar el componente
-  useEffect(() => {
-    const fetchUserProfile = async () => {
-      try {
-        const profile = await getUserProfile();
-        setUserProfile(profile);
-        console.log('Perfil de usuario:', profile); // Para debug
-      } catch (error) {
-        console.error('Error cargando perfil:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUserProfile();
-  }, []);
-
+  
   // Determinar qué enlace está activo
   const isActive = (path) => {
     return location.pathname === path ? 'active' : '';
@@ -46,7 +25,7 @@ const Navigation = () => {
           🔑 ERES ADMIN
         </div>
       )}
-      
+     
       <div className="nav-links">
         <Link to="/stocks" className={isActive('/stocks')}>
           Acciones
@@ -54,8 +33,17 @@ const Navigation = () => {
         <Link to="/my-purchases" className={isActive('/my-purchases')}>
           Mis Compras
         </Link>
+        <Link to="/mis-acciones" className={isActive('/mis-acciones')}>
+          📊 Mis Acciones
+        </Link>
         <Link to="/event-log" className={isActive('/event-log')}>
           Registro de Eventos
+        </Link>
+        {/* <Link to="/auctions" className={isActive('/auctions')}>
+          🏛️ Subastas
+        </Link> */}
+        <Link to="/exchanges" className={isActive('/exchanges')}>
+          🔄 Intercambios
         </Link>
       </div>
     </nav>

@@ -3,18 +3,62 @@ import { getAuth0Client } from "../auth0-config";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
-// Para obtener el token de Auth0
+// Cache del token para evitar múltiples llamadas simultáneas a Auth0
+let tokenCache = null;
+let tokenPromise = null;
+let tokenExpiry = 0;
+
+// Función para limpiar el cache del token
+const clearTokenCache = () => {
+  console.log("🧹 Limpiando cache de token");
+  tokenCache = null;
+  tokenPromise = null;
+  tokenExpiry = 0;
+};
+
+// Para obtener el token de Auth0 con cache
 const getToken = async () => {
   try {
-    const auth0 = await getAuth0Client();
-    const token = await auth0.getTokenSilently({
-      audience: 'https://stockmarket-api/',
-      scope: 'openid profile email',
-      cacheMode: 'off' // Opcional: forzar token fresco
-    });
-    return token;
+
+    // Verificar si el token en cache aún es válido (expires en 59 minutos)
+    if (tokenCache && Date.now() < tokenExpiry) {
+      console.log("🔑 Token obtenido desde cache");
+      return tokenCache;
+    }
+
+    // Si ya hay una llamada en progreso, esperar a que termine
+    if (tokenPromise) {
+      console.log("⏳ Esperando token en progreso...");
+      return await tokenPromise;
+    }
+
+    console.log("🔄 Obteniendo nuevo token de Auth0...");
+    
+    // Crear nueva promesa para obtener token
+    tokenPromise = (async () => {
+      const auth0 = await getAuth0Client();
+      const token = await auth0.getTokenSilently();
+      
+      // Cachear el token por 59 minutos
+      tokenCache = token;
+      tokenExpiry = Date.now() + (59 * 60 * 1000);
+      tokenPromise = null;
+      
+      console.log("🔑 Token obtenido exitosamente");
+      return token;
+    })();
+
+    return await tokenPromise;
   } catch (error) {
     console.error("Error obteniendo token:", error);
+    
+    // Si es error de "Login required", limpiar cache completamente
+    if (error.message.includes("Login required")) {
+      console.log("🚨 Error de login detectado, limpiando cache completo");
+      clearTokenCache();
+    }
+    
+    tokenPromise = null;
     return null;
   }
 };

@@ -11,10 +11,15 @@ import MyPurchases from './pages/MyPurchases';
 import PurchaseDetail from './pages/PurchaseDetail';
 import StockDetail from './pages/StockDetail';
 import EventLog from './pages/EventLog';
+import Exchanges from './pages/Exchanges';
+import MisAcciones from './pages/MisAcciones';
 import './styles/SystemStatus.css';
 import './styles/EventLog.css';
 import './styles/stock-detail.css';
+import './styles/exchanges.css';
+import './styles/misacciones.css';
 import './styles/WebSocket.css';
+
 
 
 function App() {
@@ -59,6 +64,8 @@ function App() {
                 <Route path="/my-purchases" element={<MyPurchases />} />
                 <Route path="/purchases/:id" element={<PurchaseDetail />} />
                 <Route path="/event-log" element={<EventLog />} />
+                <Route path="/exchanges" element={<Exchanges />} />
+                <Route path="/mis-acciones" element={<MisAcciones />} />
               </Routes>
             </main>
           </>
